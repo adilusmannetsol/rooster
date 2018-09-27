@@ -148,7 +148,7 @@ public class RoosterConnection implements ConnectionListener {
                 intent.putExtra(RoosterConnectionService.BUNDLE_FROM_JID, contactJid);
                 intent.putExtra(RoosterConnectionService.BUNDLE_MESSAGE_BODY, message.getBody());
                 mApplicationContext.sendBroadcast(intent);
-                Log.d(TAG, "Received message from :" + contactJid + " broadcast sent.");
+                Log.e(TAG, "Received message from :" + contactJid + " broadcast sent.");
                 ///ADDED
 
             }

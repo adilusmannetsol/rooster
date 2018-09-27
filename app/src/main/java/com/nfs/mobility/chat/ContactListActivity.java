@@ -145,6 +145,8 @@ public class ContactListActivity extends AppCompatActivity {
                         String from = intent.getStringExtra(RoosterConnectionService.BUNDLE_FROM_JID);
                         String body = intent.getStringExtra(RoosterConnectionService.BUNDLE_MESSAGE_BODY);
 
+                        Log.e(TAG, "NEW_MESSAGE: From: " + from + " Body: " + body);
+
                         if (from.equals(contactJid)) {
                             ChatMessage chatMessage = new ChatMessage(body, System.currentTimeMillis(), ChatMessage.Type.RECEIVED);
                             mChatView.addMessage(chatMessage);
