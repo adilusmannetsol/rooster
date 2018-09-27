@@ -25,14 +25,14 @@ import java.util.List;
 public class RoosterConnectionService extends Service {
     private static final String TAG = RoosterConnectionService.class.getSimpleName();
 
-    public static final String UI_AUTHENTICATED = "com.nfs.mobility.chat.UIAuthenticated";
-    public static final String SEND_MESSAGE = "com.nfs.mobility.chat.SendMessage";
+    public static final String UI_AUTHENTICATED = "mobility.chat.UIAuthenticated";
+    public static final String SEND_MESSAGE = "mobility.chat.SendMessage";
     public static final String BUNDLE_MESSAGE_BODY = "b_body";
     public static final String BUNDLE_TO = "b_to";
 
-    public static final String NEW_MESSAGE = "com.nfs.mobility.chat.NewMessage";
-    public static final String PRESENCE_CHANGED = "com.nfs.mobility.chat.PresenceChanged";
-    public static final String CONTACTS_UPDATED = "com.nfs.mobility.chat.ContactSupdated";
+    public static final String NEW_MESSAGE = "mobility.chat.NewMessage";
+    public static final String PRESENCE_CHANGED = "mobility.chat.PresenceChanged";
+    public static final String CONTACTS_UPDATED = "mobility.chat.ContactSupdated";
     public static final String BUNDLE_FROM_JID = "b_from";
     public static final String BUNDLE_PRESENCE_TYPE = "b_type";
 
