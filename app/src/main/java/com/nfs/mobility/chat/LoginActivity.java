@@ -1,4 +1,4 @@
-package com.blikoon.rooster;
+package com.nfs.mobility.chat;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -26,6 +26,8 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import com.blikoon.rooster.R;
 
 import static android.Manifest.permission.READ_CONTACTS;
 

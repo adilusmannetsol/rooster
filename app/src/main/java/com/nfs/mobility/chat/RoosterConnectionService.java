@@ -1,4 +1,4 @@
-package com.blikoon.rooster;
+package com.nfs.mobility.chat;
 
 import android.app.Service;
 import android.content.Intent;

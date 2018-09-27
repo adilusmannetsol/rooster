@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Rooster</string>
+    <string name="app_name">Mobility Chat</string>
 
     <!-- Strings related to login -->
     <string name="prompt_jid">Jabber Id</string>

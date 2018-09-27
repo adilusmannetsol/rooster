@@ -1,4 +1,4 @@
-package com.blikoon.rooster;
+package com.nfs.mobility.chat;
 
 /**
  * Created by gakwaya on 4/16/2016.

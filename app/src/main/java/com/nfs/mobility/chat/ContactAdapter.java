@@ -1,4 +1,4 @@
-package com.blikoon.rooster;
+package com.nfs.mobility.chat;
 
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
@@ -7,6 +7,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.blikoon.rooster.R;
 
 import org.jivesoftware.smack.packet.Presence;
 
