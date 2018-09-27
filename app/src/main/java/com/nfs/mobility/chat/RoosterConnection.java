@@ -41,7 +41,7 @@ import javax.net.ssl.SSLSession;
  */
 public class RoosterConnection implements ConnectionListener {
 
-    private static final String TAG = "RoosterConnection";
+    private static final String TAG = RoosterConnection.class.getSimpleName();
 
     private final Context mApplicationContext;
     private final String mUsername;

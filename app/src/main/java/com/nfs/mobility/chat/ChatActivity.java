@@ -17,7 +17,7 @@ import co.intentservice.chatui.models.ChatMessage;
 
 
 public class ChatActivity extends AppCompatActivity {
-    private static final String TAG ="ChatActivity";
+    private static final String TAG = ChatActivity.class.getSimpleName();
 
     private String contactJid;
     private ChatView mChatView;

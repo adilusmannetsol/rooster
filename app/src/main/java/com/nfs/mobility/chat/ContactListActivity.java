@@ -25,7 +25,7 @@ import co.intentservice.chatui.models.ChatMessage;
 
 public class ContactListActivity extends AppCompatActivity {
 
-    private static final String TAG = "ContactListActivity";
+    private static final String TAG = ContactListActivity.class.getSimpleName();
 
 
     private String contactJid;
