@@ -135,7 +135,7 @@ public class RoosterConnectionService extends Service {
 
             mContacts.add(contact);
         }
-        ContactModel.getInstance().setContacts(mContacts);
+        ContactRepository.getInstance().setContacts(mContacts);
 
         //Bundle up the intent and send the broadcast.
         Intent intent = new Intent(RoosterConnectionService.CONTACTS_UPDATED);

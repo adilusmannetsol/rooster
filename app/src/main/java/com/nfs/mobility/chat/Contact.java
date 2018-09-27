@@ -7,6 +7,8 @@ public class Contact {
     private String jid;
     private String userName;
     private String status;
+    private int countUnRead = 0;
+    private int countRead = 0;
 
     public Contact(String userName , String status , String contactJid)
     {
@@ -30,6 +32,18 @@ public class Contact {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public int getCountUnRead(int total) {
+        return total - countRead;
+    }
+
+    public void clearCountUnRead() {
+        this.countUnRead = 0;
+    }
+
+    public void setCountRead(int totalCount) {
+        this.countRead = totalCount;
     }
 
     @Override

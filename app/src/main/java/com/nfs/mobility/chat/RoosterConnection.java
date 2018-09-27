@@ -14,7 +14,6 @@ import org.jivesoftware.smack.ReconnectionManager;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
-
 import org.jivesoftware.smack.chat2.Chat;
 import org.jivesoftware.smack.chat2.ChatManager;
 import org.jivesoftware.smack.chat2.IncomingChatMessageListener;
@@ -143,14 +142,16 @@ public class RoosterConnection implements ConnectionListener {
                 }
 
                 //Bundle up the intent and send the broadcast.
-                Intent intent = new Intent(RoosterConnectionService.NEW_MESSAGE);
-                intent.setPackage(mApplicationContext.getPackageName());
-                intent.putExtra(RoosterConnectionService.BUNDLE_FROM_JID, contactJid);
-                intent.putExtra(RoosterConnectionService.BUNDLE_MESSAGE_BODY, message.getBody());
-                mApplicationContext.sendBroadcast(intent);
-                Log.e(TAG, "Received message from :" + contactJid + " broadcast sent.");
-                MsgManager.getInstance().messageRecievedForJID(contactJid, message.getBody());
+//                Intent intent = new Intent(RoosterConnectionService.NEW_MESSAGE);
+//                intent.setPackage(mApplicationContext.getPackageName());
+//                intent.putExtra(RoosterConnectionService.BUNDLE_FROM_JID, contactJid);
+//                intent.putExtra(RoosterConnectionService.BUNDLE_MESSAGE_BODY, message.getBody());
+//                mApplicationContext.sendBroadcast(intent);
+//                Log.e(TAG, "Received message from :" + contactJid + " broadcast sent.");
+
+
                 Log.e(TAG, "Received message from :" + contactJid + " data sent.");
+                RoosterManager.getInstance().notifyRecieveMessage(contactJid, message.getBody());
 
                 ///ADDED
 
@@ -181,7 +182,6 @@ public class RoosterConnection implements ConnectionListener {
         IntentFilter filter = new IntentFilter();
         filter.addAction(RoosterConnectionService.SEND_MESSAGE);
         mApplicationContext.registerReceiver(uiThreadMessageReceiver, filter);
-
     }
 
     private void sendMessage(String body, String toJid) {
@@ -202,10 +202,13 @@ public class RoosterConnection implements ConnectionListener {
             Message message = new Message(jid, Message.Type.chat);
             message.setBody(body);
             chat.send(message);
+            RoosterManager.getInstance().notifySendMessage(toJid, body, true);
 
         } catch (SmackException.NotConnectedException e) {
+            RoosterManager.getInstance().notifySendMessage(toJid, body, false);
             e.printStackTrace();
         } catch (InterruptedException e) {
+            RoosterManager.getInstance().notifySendMessage(toJid, body, false);
             e.printStackTrace();
         }
     }
@@ -247,17 +250,21 @@ public class RoosterConnection implements ConnectionListener {
         mRoster.addRosterListener(new RosterListener() {
             @Override
             public void entriesAdded(Collection<Jid> addresses) {
+                Log.e(TAG, "Entries Added: " + addresses.toString());
+                RoosterManager.getInstance().notifyContactAdded(addresses);
 
             }
 
             @Override
             public void entriesUpdated(Collection<Jid> addresses) {
-
+                Log.e(TAG, "Entries Updated: " + addresses.toString());
+                RoosterManager.getInstance().notifyContactUpdated(addresses);
             }
 
             @Override
             public void entriesDeleted(Collection<Jid> addresses) {
-
+                Log.e(TAG, "Entries Updated: " + addresses.toString());
+                RoosterManager.getInstance().notifyContactRemoved(addresses);
             }
 
             @Override
@@ -265,12 +272,13 @@ public class RoosterConnection implements ConnectionListener {
                 Log.e("entry", "Presence changed: " + presence.getFrom() + " " + presence);
 
                 //Bundle up the intent and send the broadcast.
-                Intent intent = new Intent(RoosterConnectionService.PRESENCE_CHANGED);
-                intent.setPackage(mApplicationContext.getPackageName());
-                intent.putExtra(RoosterConnectionService.BUNDLE_FROM_JID, presence.getFrom().asBareJid().toString());
-                intent.putExtra(RoosterConnectionService.BUNDLE_PRESENCE_TYPE, presence.getType().toString());
-                mApplicationContext.sendBroadcast(intent);
-                Log.d(TAG, "Presence Changed :" + presence.getFrom() + " update: " + presence.getType());
+//                Intent intent = new Intent(RoosterConnectionService.PRESENCE_CHANGED);
+//                intent.setPackage(mApplicationContext.getPackageName());
+//                intent.putExtra(RoosterConnectionService.BUNDLE_FROM_JID, presence.getFrom().asBareJid().toString());
+//                intent.putExtra(RoosterConnectionService.BUNDLE_PRESENCE_TYPE, presence.getType().toString());
+//                mApplicationContext.sendBroadcast(intent);
+                Log.e(TAG, "Presence Changed :" + presence.getFrom() + " update: " + presence.getType());
+                RoosterManager.getInstance().notifyPresenceChanged(presence.getFrom().asBareJid().toString(), presence.getType().toString());
             }
         });
 
@@ -281,7 +289,7 @@ public class RoosterConnection implements ConnectionListener {
         return mRoster;
     }
 
-    public void reloadRosterAndWait () throws SmackException.NotLoggedInException, InterruptedException, SmackException.NotConnectedException {
+    public void reloadRosterAndWait() throws SmackException.NotLoggedInException, InterruptedException, SmackException.NotConnectedException {
         if (mRoster != null) mRoster.reloadAndWait();
     }
 

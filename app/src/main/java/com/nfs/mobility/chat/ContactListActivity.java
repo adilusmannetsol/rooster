@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -18,6 +19,7 @@ import android.widget.Toast;
 
 import com.blikoon.rooster.R;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import co.intentservice.chatui.ChatView;
@@ -49,11 +51,13 @@ public class ContactListActivity extends AppCompatActivity {
         contactsRecyclerView = (RecyclerView) findViewById(R.id.contact_list_online_recycler_view);
         contactsRecyclerView.setLayoutManager(new LinearLayoutManager(getBaseContext()));
 
-        ContactModel model = ContactModel.getInstance();
+        ContactRepository model = ContactRepository.getInstance();
         List<Contact> contacts = model.getContacts();
 
         mAdapter = new ContactAdapter(contacts,listActionListener);
         contactsRecyclerView.setAdapter(mAdapter);
+
+        RoosterManager.getInstance().addOnMessageChangeListener(messageChangeListener);
     }
 
     ContactListActionListener listActionListener = new ContactListActionListener() {
@@ -175,13 +179,13 @@ public class ContactListActivity extends AppCompatActivity {
 
                         Log.e(TAG, "Presence from: " + from + " updated to " + type);
 
-                        for (Contact contact : ContactModel.getInstance().getContacts()) {
+                        for (Contact contact : ContactRepository.getInstance().getContacts()) {
                             if (contact.getJid().equals(from)) {
                                 contact.setStatus(type);
                             }
                         }
 
-                        mAdapter.update(ContactModel.getInstance().getContacts());
+                        mAdapter.update(ContactRepository.getInstance().getContacts());
 
                         return;
                 }
@@ -198,7 +202,7 @@ public class ContactListActivity extends AppCompatActivity {
                 String action = intent.getAction();
                 switch (action) {
                     case RoosterConnectionService.CONTACTS_UPDATED:
-                        mAdapter.update(ContactModel.getInstance().getContacts());
+                        mAdapter.update(ContactRepository.getInstance().getContacts());
                         return;
                 }
             }
@@ -207,125 +211,41 @@ public class ContactListActivity extends AppCompatActivity {
         IntentFilter filterContactsUpdated = new IntentFilter(RoosterConnectionService.CONTACTS_UPDATED);
         registerReceiver(mBroadcastReceiverContactsUpdated, filterContactsUpdated);
 
-
     }
 
-//   private class ContactHolder extends RecyclerView.ViewHolder {
-//        private TextView contactTextView;
-//        private ImageView contactImageView;
-//        private CardView rootItem;
-//        private Contact mContact;
-//        private boolean isOnline = false;
-//        ContactHolder contactHolder = this;
-//
-//        public ContactHolder(View itemView) {
-//            super(itemView);
-//
-//            rootItem = (CardView) itemView.findViewById(R.id.root_item);
-//            contactTextView = (TextView) itemView.findViewById(R.id.contact_jid);
-//            contactImageView = (ImageView) itemView.findViewById(R.id.contact_image);
-//
-//            itemView.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//
-//                    if (mChatView.getVisibility() != View.VISIBLE) {
-//                        mChatView.setVisibility(View.VISIBLE);
-//                        notSelectedTxt.setVisibility(View.GONE);
-//                    } else {
-//                        mChatView.clearMessages();
-//                    }
-//
-//
-//                    if (itemClicked != null && itemClicked != contactHolder)
-//                        itemClicked.rootItem.setCardBackgroundColor(getResources().getColor(R.color.white));
-//
-//                    itemClicked = contactHolder;
-//                    rootItem.setCardBackgroundColor(getResources().getColor(R.color.blue));
-//
-//                    mChatView.setOnSentMessageListener(new ChatView.OnSentMessageListener() {
-//                        @Override
-//                        public boolean sendMessage(ChatMessage chatMessage) {
-//                            // perform actual message sending
-//                            if (RoosterConnectionService.getState().equals(RoosterConnection.ConnectionState.CONNECTED)) {
-//                                Log.d(TAG, "The client is connected to the server,Sending Message");
-//                                //Send the message to the server
-//
-//                                Intent intent = new Intent(RoosterConnectionService.SEND_MESSAGE);
-//                                intent.putExtra(RoosterConnectionService.BUNDLE_MESSAGE_BODY,
-//                                        mChatView.getTypedMessage());
-//                                intent.putExtra(RoosterConnectionService.BUNDLE_TO, mContact.getJid());
-//
-//                                sendBroadcast(intent);
-//
-//                            } else {
-//                                Toast.makeText(getApplicationContext(),
-//                                        "Client not connected to server ,Message not sent!",
-//                                        Toast.LENGTH_LONG).show();
-//                            }
-//                            //message sending ends here
-//                            return true;
-//                        }
-//                    });
-//
-//                    contactJid = mContact.getJid();
-//
-//                }
-//            });
-//        }
-//
-//
-//        public void bindContact(Contact contact) {
-//            mContact = contact;
-//            if (mContact == null) {
-//                Log.d(TAG, "Trying to work on a null Contact object ,returning.");
-//                return;
-//            }
-//            contactTextView.setText(contact.getUserName());
-//            if (contact.getStatus().equals(Presence.Type.available.toString())) {
-//                contactImageView.setVisibility(View.VISIBLE);
-//            } else {
-//                contactImageView.setVisibility(View.INVISIBLE);
-//
-//            }
-//        }
-//    }
-//
-//
-//    private class ContactAdapter extends RecyclerView.Adapter<ContactHolder> {
-//        private List<Contact> mContacts;
-//
-//
-//        public ContactAdapter(List<Contact> contactList) {
-//            mContacts = contactList;
-//        }
-//
-//        public void update(List<Contact> contactList) {
-//            mContacts = contactList;
-//            notifyDataSetChanged();
-//        }
-//
-//        @Override
-//        public ContactHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-//
-//            LayoutInflater layoutInflater = LayoutInflater.from(parent.getContext());
-//            View view = layoutInflater
-//                    .inflate(R.layout.list_item_contact, parent,
-//                            false);
-//
-//            return new ContactHolder(view);
-//        }
-//
-//        @Override
-//        public void onBindViewHolder(ContactHolder holder, int position) {
-//            Contact contact = mContacts.get(position);
-//            holder.bindContact(contact);
-//
-//        }
-//
-//        @Override
-//        public int getItemCount() {
-//            return mContacts.size();
-//        }
-//    }
+    RoosterManager.OnMessageChangeListener messageChangeListener = new RoosterManager.OnMessageChangeListener() {
+        @Override
+        public void onMessageReceived(String fromJID, String newMessage, int totalCount) {
+            Log.e(TAG, "OnMessageChangeListener: onMessageReceived: " + fromJID + " ---> " + newMessage + " ---> " + totalCount);
+            final String mJID = fromJID;
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    List<ChatMessage> chatMessageList = MessageRepository.getInstance().getMessages(mJID);
+                    mChatView.clearMessages();
+                    mChatView.addMessages(new ArrayList<ChatMessage>(chatMessageList));
+                }
+            });
+        }
+
+        @Override
+        public void onMessageSent(String toJID, String newMessage, int totalCount, boolean success) {
+            Log.e(TAG, "OnMessageChangeListener: onMessageSent: " + toJID + " ---> " + success + " ---> " + totalCount);
+            if(!success){
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        mChatView.removeMessage(0);
+                    }
+                }, 3000);
+            }
+        }
+
+        @Override
+        public void onMessageDeleted(String jid, String message, int totalCount) {
+
+        }
+    };
+
+
 }
