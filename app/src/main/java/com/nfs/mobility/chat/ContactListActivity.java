@@ -237,7 +237,7 @@ public class ContactListActivity extends AppCompatActivity {
                     public void run() {
                         mChatView.removeMessage(0);
                     }
-                }, 3000);
+                }, 1000);
             }
         }
 
