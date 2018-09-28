@@ -25,15 +25,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="com.nfs.mobility.chat.TestChatActivity"></activity>
-        <activity android:name="com.nfs.mobility.chat.ChatActivity"></activity>
+        <activity android:name="com.nfs.mobility.chat.TestChatActivity"> </activity>
+        <activity android:name="com.nfs.mobility.chat.ChatActivity"> </activity>
 
         <service android:name="com.nfs.mobility.chat.RosterConnectionService"></service>
 
-        <activity
-            android:name="com.nfs.mobility.chat.ChatContactsActivity"
-            android:label="@string/title_item_list"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+        <activity android:name="com.nfs.mobility.chat.ChatContactsActivity">
+        </activity>
         <activity
             android:name="com.nfs.mobility.chat.ChatDetailActivity"
             android:label="@string/title_item_detail"

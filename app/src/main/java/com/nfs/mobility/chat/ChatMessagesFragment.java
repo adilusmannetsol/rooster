@@ -4,6 +4,7 @@ package com.nfs.mobility.chat;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.UiThread;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -39,6 +40,7 @@ public class ChatMessagesFragment extends Fragment {
 
     private ChatView mChatView;
 
+    private Handler mHandler = new Handler(Looper.getMainLooper());
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -64,8 +66,6 @@ public class ChatMessagesFragment extends Fragment {
 
         mChatView = rootView.findViewById(R.id.roster_chat_view);
 
-        //mChatView.addMessages(new ArrayList<ChatMessage>(MsgManager.getInstance().getChatData().get(contactJid)));
-
         mChatView.setOnSentMessageListener(new ChatView.OnSentMessageListener() {
             @Override
             public boolean sendMessage(ChatMessage chatMessage) {
@@ -86,12 +86,18 @@ public class ChatMessagesFragment extends Fragment {
                             "Client not connected to server ,Message not sent!",
                             Toast.LENGTH_LONG).show();
                 }
-                //message sending ends here
+
                 return true;
             }
         });
 
         return rootView;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        updateMessageList();
     }
 
     @Override
@@ -104,28 +110,29 @@ public class ChatMessagesFragment extends Fragment {
         RosterManager.getInstance().removeOnMessageChangeListener(messageChangeListener);
     }
 
+    private void updateMessageList() {
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+
+                List<ChatMessage> chatMessageList = MessageRepository.getInstance().getMessages(contactJid);
+                mChatView.clearMessages();
+                mChatView.addMessages(new ArrayList<ChatMessage>(chatMessageList));
+            }
+        });
+    }
+
     RosterManager.OnMessageChangeListener messageChangeListener = new RosterManager.OnMessageChangeListener() {
         @Override
         public void onMessageReceived(String fromJID, String newMessage, int totalCount) {
             Log.e(TAG, "OnMessageChangeListener: onMessageReceived: " + fromJID + " ---> " + newMessage + " ---> " + totalCount);
-            final String mJID = fromJID;
             updateMessageList();
-
         }
 
         @Override
         public void onMessageSent(String toJID, String newMessage, int totalCount, boolean success) {
             Log.e(TAG, "OnMessageChangeListener: onMessageSent: " + toJID + " ---> " + success + " ---> " + totalCount);
-            if (!success) {
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        //mChatView.removeMessage(0);
-                    }
-                }, 1000);
-            }else {
-                updateMessageList();
-            }
+            updateMessageList();
         }
 
         @Override
@@ -133,14 +140,5 @@ public class ChatMessagesFragment extends Fragment {
 
         }
     };
-
-    @UiThread
-    private void updateMessageList(){
-        List<ChatMessage> chatMessageList = MessageRepository.getInstance().getMessages(contactJid);
-        mChatView.clearMessages();
-        mChatView.addMessages(new ArrayList<ChatMessage>(chatMessageList));
-    }
-
-
 
 }

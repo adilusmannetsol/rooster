@@ -8,6 +8,7 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context="com.blikoon.roster.com.nfs.mobility.chat.ChatContactsActivity"
     android:orientation="horizontal"
     android:background="@color/white">
 
