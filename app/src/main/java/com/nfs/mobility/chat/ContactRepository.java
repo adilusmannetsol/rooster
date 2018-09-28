@@ -49,6 +49,15 @@ public class ContactRepository {
         return mContacts;
     }
 
+    public Contact getContact(String jid){
+        for(Contact contact : mContacts){
+            if(contact.getJid().equals(jid)){
+                return contact;
+            }
+        }
+        return null;
+    }
+
     public void setStatus(String jid, String status) {
         for (Contact contact : mContacts) {
             if (contact.getJid().equals(jid)) {

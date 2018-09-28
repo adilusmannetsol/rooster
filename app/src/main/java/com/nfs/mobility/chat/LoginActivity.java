@@ -311,8 +311,8 @@ public class LoginActivity extends AppCompatActivity {
             if(connectionState.equals(RosterConnection.ConnectionState.AUTHENTICATED)){
             Log.d(TAG, "Got a broadcast to show the main app window");
             //Show the main app window
-            showProgress(false);
             loadContactListActivity();
+            showProgress(false);
             }
         }
     };

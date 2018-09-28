@@ -81,11 +81,7 @@ class RosterManager {
     }
 
     public void connectUser(final String jid, final String password) {
-        if(mContext == null) throw new IllegalStateException("Initiation Exception: Initiate RosterManager First, RosterManager.init()");
-
-        if(mThread == null) throw new IllegalStateException("Initiation Exception: Initiate RosterManager First, Thread is not initialized");
-        if(mTHandler == null) throw new IllegalStateException("Initiation Exception: Initiate RosterManager First, Thread Handler is not initialized");
-
+        validateState();
         mTHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -94,16 +90,25 @@ class RosterManager {
         });
     }
 
-    public void disconnectUser(){
+    private void validateState() {
         if(mContext == null) throw new IllegalStateException("Initiation Exception: Initiate RosterManager First, RosterManager.init()");
-
         if(mThread == null) throw new IllegalStateException("Initiation Exception: Initiate RosterManager First, Thread is not initialized");
         if(mTHandler == null) throw new IllegalStateException("Initiation Exception: Initiate RosterManager First, Thread Handler is not initialized");
+    }
 
+    public void disconnectUser(){
+        validateState();
         mTHandler.post(new Runnable() {
             @Override
             public void run() {
                 closeConnection();
+            }
+        });
+
+        mTHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                cleanUpManager();
             }
         });
     }

@@ -1,6 +1,7 @@
 package com.nfs.mobility.chat;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.support.annotation.UiThread;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -14,11 +15,13 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.allyants.notifyme.NotifyMe;
 import com.blikoon.roster.R;
 
 import org.jxmpp.jid.Jid;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
 
@@ -40,11 +43,16 @@ public class TestChatActivity extends AppCompatActivity {
     private TextView notSelectedTxt;
     private ContactAdapter mAdapter;
 
+    NotifyMe.Builder notifyMe;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_contact_list);
+
+
+        notifyMe = new NotifyMe.Builder(getApplicationContext());
 
         mChatView = (ChatView) findViewById(R.id.roster_chat_view);
         notSelectedTxt = (TextView) findViewById(R.id.not_selected_chat_account_txt);
@@ -135,85 +143,11 @@ public class TestChatActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-//        unregisterReceiver(mBroadcastReceiverNewMessage);
-//        unregisterReceiver(mBroadcastReceiverPresenceChanged);
-//        unregisterReceiver(mBroadcastReceiverContactsUpdated);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-//        mBroadcastReceiverNewMessage = new BroadcastReceiver() {
-//            @Override
-//            public void onReceive(Context context, Intent intent) {
-//                String action = intent.getAction();
-//                switch (action) {
-//                    case RosterConnectionService.NEW_MESSAGE:
-//                        String from = intent.getStringExtra(RosterConnectionService.BUNDLE_FROM_JID);
-//                        String body = intent.getStringExtra(RosterConnectionService.BUNDLE_MESSAGE_BODY);
-//
-//                        Log.e(TAG, "NEW_MESSAGE: From: " + from + " Body: " + body);
-//
-//                        if (from.equals(contactJid)) {
-//                            ChatMessage chatMessage = new ChatMessage(body, System.currentTimeMillis(), ChatMessage.Type.RECEIVED);
-//                            mChatView.addMessage(chatMessage);
-//
-//                        } else {
-//                            Log.d(TAG, "Got a message from jid :" + from);
-//                        }
-//
-//                        return;
-//                }
-//
-//            }
-//        };
-//
-//        IntentFilter filterNewMessage = new IntentFilter(RosterConnectionService.NEW_MESSAGE);
-//        registerReceiver(mBroadcastReceiverNewMessage, filterNewMessage);
-
-//        mBroadcastReceiverPresenceChanged = new BroadcastReceiver() {
-//            @Override
-//            public void onReceive(Context context, Intent intent) {
-//                String action = intent.getAction();
-//                switch (action) {
-//                    case RosterConnectionService.PRESENCE_CHANGED:
-//                        String from = intent.getStringExtra(RosterConnectionService.BUNDLE_FROM_JID);
-//                        String type = intent.getStringExtra(RosterConnectionService.BUNDLE_PRESENCE_TYPE);
-//
-//                        Log.e(TAG, "Presence from: " + from + " updated to " + type);
-//
-//                        for (Contact contact : ContactRepository.getInstance().getContacts()) {
-//                            if (contact.getJid().equals(from)) {
-//                                contact.setStatus(type);
-//                            }
-//                        }
-//
-//                        mAdapter.update(ContactRepository.getInstance().getContacts());
-//
-//                        return;
-//                }
-//
-//            }
-//        };
-//
-//        IntentFilter filterPresenceChanged = new IntentFilter(RosterConnectionService.PRESENCE_CHANGED);
-//        registerReceiver(mBroadcastReceiverPresenceChanged, filterPresenceChanged);
-
-//        mBroadcastReceiverContactsUpdated = new BroadcastReceiver() {
-//            @Override
-//            public void onReceive(Context context, Intent intent) {
-//                String action = intent.getAction();
-//                switch (action) {
-//                    case RosterConnectionService.CONTACTS_UPDATED:
-//                        mAdapter.update(ContactRepository.getInstance().getContacts());
-//                        return;
-//                }
-//            }
-//        };
-
-//        IntentFilter filterContactsUpdated = new IntentFilter(RosterConnectionService.CONTACTS_UPDATED);
-//        registerReceiver(mBroadcastReceiverContactsUpdated, filterContactsUpdated);
-
     }
 
     //region RosterManager
@@ -252,10 +186,31 @@ public class TestChatActivity extends AppCompatActivity {
                 mChatView.addMessages(new ArrayList<ChatMessage>(chatMessageList));
             }
         });
+    }
 
-//        List<ChatMessage> chatMessageList = MessageRepository.getInstance().getMessages(contactJid);
-//        mChatView.clearMessages();
-//        mChatView.addMessages(new ArrayList<ChatMessage>(chatMessageList));
+    void showNotifications(String fromJID, String newMessage) {
+
+        Contact contact = ContactRepository.getInstance().getContact(fromJID);
+
+        String title = contact.getUserName();
+        String content = newMessage;
+        int red = 0;
+        int green = 102;
+        int blue = 204;
+        int alpha = 255;
+        String text = "Mark As Read";
+
+
+        notifyMe.title(title);
+        notifyMe.content(content);
+        notifyMe.color(red, green, blue, alpha);//Color of notification header
+        notifyMe.led_color(red, green, blue, alpha);//Color of LED when notification pops up
+//        notifyMe.time(Calendar.getInstance().getTime());//The time to popup notification
+        notifyMe.delay(2000);//Delay in ms
+        notifyMe.key("new_message");
+//        notifyMe.large_icon(Int resource);
+//        notifyMe.addAction(Intent intent, text); //The action will call the intent when pressed
+        notifyMe.build();
     }
 
     RosterManager.OnRosterUpdatesListener rosterUpdatesListener = new RosterManager.OnRosterUpdatesListener() {
@@ -289,6 +244,7 @@ public class TestChatActivity extends AppCompatActivity {
         public void onMessageReceived(String fromJID, String newMessage, int totalCount) {
             Log.e(TAG, "OnMessageChangeListener: onMessageReceived: " + fromJID + " ---> " + newMessage + " ---> " + totalCount);
             updateMessageList();
+            showNotifications(fromJID, newMessage);
         }
 
         @Override
