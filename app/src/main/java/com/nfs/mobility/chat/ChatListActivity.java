@@ -78,7 +78,7 @@ public class ChatListActivity extends AppCompatActivity {
         mAdapter = new ContactAdapter(contacts,listActionListener);
         contactsRecyclerView.setAdapter(mAdapter);
 
-        RosterManager.getInstance().addOnMessageChangeListener(messageChangeListener);
+
         RosterManager.getInstance().addOnRosterChangeListener(roosterUpdatesListener);
 
         }
@@ -237,7 +237,6 @@ public class ChatListActivity extends AppCompatActivity {
 
 
     void cleanUpRosterListeners() {
-        RosterManager.getInstance().removeOnMessageChangeListener(messageChangeListener);
         RosterManager.getInstance().removeOnRosterChangeListener(roosterUpdatesListener);
     }
 
@@ -273,38 +272,6 @@ public class ChatListActivity extends AppCompatActivity {
         }
     };
 
-    RosterManager.OnMessageChangeListener messageChangeListener = new RosterManager.OnMessageChangeListener() {
-        @Override
-        public void onMessageReceived(String fromJID, String newMessage, int totalCount) {
-            Log.e(TAG, "OnMessageChangeListener: onMessageReceived: " + fromJID + " ---> " + newMessage + " ---> " + totalCount);
-            final String mJID = fromJID;
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    List<ChatMessage> chatMessageList = MessageRepository.getInstance().getMessages(mJID);
-                    //mChatView.clearMessages();
-                    //mChatView.addMessages(new ArrayList<ChatMessage>(chatMessageList));
-                }
-            });
-        }
 
-        @Override
-        public void onMessageSent(String toJID, String newMessage, int totalCount, boolean success) {
-            Log.e(TAG, "OnMessageChangeListener: onMessageSent: " + toJID + " ---> " + success + " ---> " + totalCount);
-            if(!success){
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        //mChatView.removeMessage(0);
-                    }
-                }, 1000);
-            }
-        }
-
-        @Override
-        public void onMessageDeleted(String jid, String message, int totalCount) {
-
-        }
-    };
     //endregion
 }
