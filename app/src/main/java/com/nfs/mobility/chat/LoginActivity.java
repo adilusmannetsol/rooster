@@ -12,6 +12,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.annotation.UiThread;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Build;
@@ -89,6 +90,8 @@ public class LoginActivity extends AppCompatActivity {
         mProgressView = findViewById(R.id.login_progress);
         mContext = this;
 
+        RosterManager.getInstance().init(this);
+        RosterManager.getInstance().addOnConnectionStateListener(connectionStateListener);
 
     }
 
@@ -235,8 +238,12 @@ public class LoginActivity extends AppCompatActivity {
                 .commit();
 
         //Start the service
-        Intent i1 = new Intent(this, RosterConnectionService.class);
-        startService(i1);
+//        Intent i1 = new Intent(this, RosterConnectionService.class);
+//        startService(i1);
+
+        String jid = mJidView.getText().toString();
+        String password = mPasswordView.getText().toString();
+        RosterManager.getInstance().connectUser(jid, password);
 
     }
 
@@ -296,6 +303,37 @@ public class LoginActivity extends AppCompatActivity {
             }
         }
         return false;
+    }
+
+    RosterManager.OnConnectionStateListener connectionStateListener = new RosterManager.OnConnectionStateListener() {
+        @Override
+        public void onConnectionStateChange(RosterConnection.ConnectionState connectionState) {
+            if(connectionState.equals(RosterConnection.ConnectionState.AUTHENTICATED)){
+            Log.d(TAG, "Got a broadcast to show the main app window");
+            //Show the main app window
+            showProgress(false);
+            loadContactListActivity();
+            }
+        }
+    };
+
+    @UiThread
+    void loadContactListActivity() {
+        Intent intentContactList = new Intent(mContext, ChatListActivity.class);
+        intentContactList = new Intent(mContext, ContactListActivity.class);
+        startActivity(intentContactList);
+        finish();
+    }
+
+    @Override
+    protected void onDestroy() {
+        cleanUpRosterListeners();
+        super.onDestroy();
+    }
+
+
+    void cleanUpRosterListeners() {
+        RosterManager.getInstance().removeOnConnectionStateListener(connectionStateListener);
     }
 
 

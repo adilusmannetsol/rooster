@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Handler;
+import android.support.annotation.UiThread;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -35,9 +36,9 @@ public class ContactListActivity extends AppCompatActivity {
 
     private String contactJid;
     private ChatView mChatView;
-    private BroadcastReceiver mBroadcastReceiverNewMessage;
-    private BroadcastReceiver mBroadcastReceiverPresenceChanged;
-    private BroadcastReceiver mBroadcastReceiverContactsUpdated;
+//    private BroadcastReceiver mBroadcastReceiverNewMessage;
+//    private BroadcastReceiver mBroadcastReceiverPresenceChanged;
+//    private BroadcastReceiver mBroadcastReceiverContactsUpdated;
 
     private RecyclerView contactsRecyclerView;
     private TextView notSelectedTxt;
@@ -120,6 +121,8 @@ public class ContactListActivity extends AppCompatActivity {
             Intent i1 = new Intent(this, RosterConnectionService.class);
             stopService(i1);
 
+            RosterManager.getInstance().disconnectUser();
+
             //Finish this activity
             finish();
 
@@ -136,9 +139,9 @@ public class ContactListActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        unregisterReceiver(mBroadcastReceiverNewMessage);
-        unregisterReceiver(mBroadcastReceiverPresenceChanged);
-        unregisterReceiver(mBroadcastReceiverContactsUpdated);
+//        unregisterReceiver(mBroadcastReceiverNewMessage);
+//        unregisterReceiver(mBroadcastReceiverPresenceChanged);
+//        unregisterReceiver(mBroadcastReceiverContactsUpdated);
     }
 
     @Override
@@ -200,20 +203,20 @@ public class ContactListActivity extends AppCompatActivity {
 //        IntentFilter filterPresenceChanged = new IntentFilter(RosterConnectionService.PRESENCE_CHANGED);
 //        registerReceiver(mBroadcastReceiverPresenceChanged, filterPresenceChanged);
 
-        mBroadcastReceiverContactsUpdated = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                String action = intent.getAction();
-                switch (action) {
-                    case RosterConnectionService.CONTACTS_UPDATED:
-                        mAdapter.update(ContactRepository.getInstance().getContacts());
-                        return;
-                }
-            }
-        };
+//        mBroadcastReceiverContactsUpdated = new BroadcastReceiver() {
+//            @Override
+//            public void onReceive(Context context, Intent intent) {
+//                String action = intent.getAction();
+//                switch (action) {
+//                    case RosterConnectionService.CONTACTS_UPDATED:
+//                        mAdapter.update(ContactRepository.getInstance().getContacts());
+//                        return;
+//                }
+//            }
+//        };
 
-        IntentFilter filterContactsUpdated = new IntentFilter(RosterConnectionService.CONTACTS_UPDATED);
-        registerReceiver(mBroadcastReceiverContactsUpdated, filterContactsUpdated);
+//        IntentFilter filterContactsUpdated = new IntentFilter(RosterConnectionService.CONTACTS_UPDATED);
+//        registerReceiver(mBroadcastReceiverContactsUpdated, filterContactsUpdated);
 
     }
 
@@ -221,6 +224,7 @@ public class ContactListActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         cleanUpRosterListeners();
+        RosterManager.getInstance().disconnectUser();
         super.onDestroy();
     }
 
@@ -230,35 +234,57 @@ public class ContactListActivity extends AppCompatActivity {
         RosterManager.getInstance().removeOnRosterChangeListener(rosterUpdatesListener);
     }
 
+    @UiThread
+    private void updateContactListView() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mAdapter.update(ContactRepository.getInstance().getContacts());
+            }
+        });
+//        mAdapter.update(ContactRepository.getInstance().getContacts());
+    }
+
+    @UiThread
+    private void updateMessageList() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+
+                List<ChatMessage> chatMessageList = MessageRepository.getInstance().getMessages(contactJid);
+                mChatView.clearMessages();
+                mChatView.addMessages(new ArrayList<ChatMessage>(chatMessageList));
+            }
+        });
+
+//        List<ChatMessage> chatMessageList = MessageRepository.getInstance().getMessages(contactJid);
+//        mChatView.clearMessages();
+//        mChatView.addMessages(new ArrayList<ChatMessage>(chatMessageList));
+    }
+
     RosterManager.OnRosterUpdatesListener rosterUpdatesListener = new RosterManager.OnRosterUpdatesListener() {
         @Override
         public void onChangePresence(String jid, String status) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    mAdapter.update(ContactRepository.getInstance().getContacts());
-                }
-            });
+            Log.e(TAG, "Presence Changed: " + jid + " , status: " + status);
+            updateContactListView();
         }
 
         @Override
         public void onRemoveContact(Collection<Jid> addresses) {
-
+            Log.e(TAG, "Contact Removed: " + addresses.toString());
+            updateContactListView();
         }
 
         @Override
         public void onUpdateContact(Collection<Jid> addresses) {
-
-        }
-
-        @Override
-        public void onDeleteContact() {
-
+            Log.e(TAG, "Contact Updated: " + addresses.toString());
+            updateContactListView();
         }
 
         @Override
         public void onAddContact(Collection<Jid> addresses) {
-
+            Log.e(TAG, "Contact Added: " + addresses.toString());
+            updateContactListView();
         }
     };
 
@@ -266,28 +292,13 @@ public class ContactListActivity extends AppCompatActivity {
         @Override
         public void onMessageReceived(String fromJID, String newMessage, int totalCount) {
             Log.e(TAG, "OnMessageChangeListener: onMessageReceived: " + fromJID + " ---> " + newMessage + " ---> " + totalCount);
-            final String mJID = fromJID;
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    List<ChatMessage> chatMessageList = MessageRepository.getInstance().getMessages(mJID);
-                    mChatView.clearMessages();
-                    mChatView.addMessages(new ArrayList<ChatMessage>(chatMessageList));
-                }
-            });
+            updateMessageList();
         }
 
         @Override
         public void onMessageSent(String toJID, String newMessage, int totalCount, boolean success) {
             Log.e(TAG, "OnMessageChangeListener: onMessageSent: " + toJID + " ---> " + success + " ---> " + totalCount);
-            if(!success){
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        mChatView.removeMessage(0);
-                    }
-                }, 1000);
-            }
+            updateMessageList();
         }
 
         @Override
