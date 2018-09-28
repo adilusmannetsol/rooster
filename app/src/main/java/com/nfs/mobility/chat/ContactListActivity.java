@@ -220,12 +220,12 @@ public class ContactListActivity extends AppCompatActivity {
     //region RoosterManager
     @Override
     protected void onDestroy() {
-        cleanUpRoosterListners();
+        cleanUpRoosterListeners();
         super.onDestroy();
     }
 
 
-    void cleanUpRoosterListners() {
+    void cleanUpRoosterListeners() {
         RoosterManager.getInstance().removeOnMessageChangeListener(messageChangeListener);
         RoosterManager.getInstance().removeOnRoosterChangeListener(roosterUpdatesListener);
     }
