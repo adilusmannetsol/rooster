@@ -78,6 +78,7 @@ public class ChatContactsActivity extends AppCompatActivity {
         mAdapter = new ContactAdapter(contacts, listActionListener);
         contactsRecyclerView.setAdapter(mAdapter);
 
+        RosterManager.getInstance().enableNotifications(true);
         RosterManager.getInstance().addOnRosterChangeListener(rosterUpdatesListener);
         RosterManager.getInstance().addOnMessageChangeListener(messageChangeListener);
 
