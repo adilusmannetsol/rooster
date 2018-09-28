@@ -98,4 +98,8 @@ public class ContactRepository {
     public void updateContacts(Collection<Jid> addresses) {
 //        mContacts.add(addresses);
     }
+
+    public void cleanUpContacts() {
+        mContacts.clear();
+    }
 }

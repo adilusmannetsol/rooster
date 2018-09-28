@@ -15,6 +15,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
+import com.allyants.notifyme.NotifyMe;
 import com.blikoon.roster.R;
 
 import org.jxmpp.jid.Jid;
@@ -47,12 +48,16 @@ public class ChatContactsActivity extends AppCompatActivity {
 
     private ContactAdapter mAdapter;
 
+    NotifyMe.Builder notifyMe;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_item_list);
 
+        notifyMe = new NotifyMe.Builder(getApplicationContext());
 
         contactsRecyclerView = (RecyclerView) findViewById(R.id.contact_list_online_recycler_view);
         contactsRecyclerView.setLayoutManager(new LinearLayoutManager(getBaseContext()));
@@ -74,6 +79,7 @@ public class ChatContactsActivity extends AppCompatActivity {
         contactsRecyclerView.setAdapter(mAdapter);
 
         RosterManager.getInstance().addOnRosterChangeListener(rosterUpdatesListener);
+        RosterManager.getInstance().addOnMessageChangeListener(messageChangeListener);
 
     }
 
@@ -149,6 +155,7 @@ public class ChatContactsActivity extends AppCompatActivity {
 
     void cleanUpRosterListeners() {
         RosterManager.getInstance().removeOnRosterChangeListener(rosterUpdatesListener);
+        RosterManager.getInstance().removeOnMessageChangeListener(messageChangeListener);
     }
 
     @UiThread
@@ -186,6 +193,47 @@ public class ChatContactsActivity extends AppCompatActivity {
             updateContactListView();
         }
     };
+
+    RosterManager.OnMessageChangeListener messageChangeListener = new RosterManager.OnMessageChangeListener() {
+        @Override
+        public void onMessageReceived(String fromJID, String newMessage, int totalCount) {
+//            showNotifications(fromJID, newMessage);
+        }
+
+        @Override
+        public void onMessageSent(String toJID, String newMessage, int totalCount, boolean success) {
+
+        }
+
+        @Override
+        public void onMessageDeleted(String jid, String message, int totalCount) {
+
+        }
+    };
+
+    void showNotifications(String fromJID, String newMessage) {
+
+        Contact contact = ContactRepository.getInstance().getContact(fromJID);
+
+        String title = contact.getUserName();
+        String content = newMessage;
+        int red = 0;
+        int green = 102;
+        int blue = 204;
+        int alpha = 255;
+
+
+        notifyMe.title(title);
+        notifyMe.content(content);
+//        notifyMe.color(red, green, blue, alpha);//Color of notification header
+//        notifyMe.led_color(red, green, blue, alpha);//Color of LED when notification pops up
+//        notifyMe.time(Calendar.getInstance().getTime());//The time to popup notification
+        notifyMe.delay(1000);//Delay in ms
+        notifyMe.key("new_message");
+//        notifyMe.large_icon(Int resource);
+//        notifyMe.addAction(Intent intent, text); //The action will call the intent when pressed
+        notifyMe.build();
+    }
 
     //endregion
 }

@@ -65,6 +65,7 @@ public class TestChatActivity extends AppCompatActivity {
         mAdapter = new ContactAdapter(contacts,listActionListener);
         contactsRecyclerView.setAdapter(mAdapter);
 
+        RosterManager.getInstance().enableNotifications(false);
         RosterManager.getInstance().addOnMessageChangeListener(messageChangeListener);
         RosterManager.getInstance().addOnRosterChangeListener(rosterUpdatesListener);
     }

@@ -1,10 +1,13 @@
 package com.nfs.mobility.chat;
 
 import android.content.Context;
-import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+
+import com.allyants.notifyme.NotifyMe;
+import com.blikoon.roster.R;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
@@ -27,6 +30,7 @@ class RosterManager {
     private static final RosterManager ourInstance = new RosterManager();
     private static final String TAG = RosterManager.class.getSimpleName();
     private RosterConnection.ConnectionState mConnectionState;
+    private boolean mShowNotifications;
 
     static RosterManager getInstance() {
         if (ourInstance == null)
@@ -43,7 +47,7 @@ class RosterManager {
     private Set<OnRosterUpdatesListener> mRosterUpdatesListeners = new CopyOnWriteArraySet<>();
     private Set<OnConnectionStateListener> mConnectionStateListeners = new CopyOnWriteArraySet<>();
 
-    Context mContext;
+    Context mApplicationContext;
 
     Long authenticateTime;
 
@@ -76,7 +80,7 @@ class RosterManager {
          * Notify Authenticate
          * Notify Failure
          */
-        mContext = context.getApplicationContext();
+        mApplicationContext = context.getApplicationContext();
         initiateThread();
     }
 
@@ -85,13 +89,13 @@ class RosterManager {
         mTHandler.post(new Runnable() {
             @Override
             public void run() {
-                initConnection(mContext, jid, password);
+                initConnection(mApplicationContext, jid, password);
             }
         });
     }
 
     private void validateState() {
-        if(mContext == null) throw new IllegalStateException("Initiation Exception: Initiate RosterManager First, RosterManager.init()");
+        if(mApplicationContext == null) throw new IllegalStateException("Initiation Exception: Initiate RosterManager First, RosterManager.init() with ApplicationContext()");
         if(mThread == null) throw new IllegalStateException("Initiation Exception: Initiate RosterManager First, Thread is not initialized");
         if(mTHandler == null) throw new IllegalStateException("Initiation Exception: Initiate RosterManager First, Thread Handler is not initialized");
     }
@@ -133,7 +137,17 @@ class RosterManager {
         }
     }
 
-    public void updateRoster() {
+    public void loadContacts (){
+        validateState();
+        mTHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                updateRoster();
+            }
+        });
+    }
+
+    private void updateRoster() {
         if (mConnection == null) return;
         try {
             mConnection.reloadRosterAndWait();
@@ -187,9 +201,30 @@ class RosterManager {
 
         count = MessageRepository.getInstance().addMessage(jid, chatMessage);
 
+        if(mShowNotifications){
+            showNotifications(jid, messageBody);
+        }
+
         for (OnMessageChangeListener listener : mMessageChangeListeners) {
             listener.onMessageReceived(jid, messageBody, count);
         }
+    }
+
+    private void showNotifications(String fromJID, String newMessage) {
+        validateState();
+        Contact contact = ContactRepository.getInstance().getContact(fromJID);
+        if(contact == null) return;
+        int red = 0;
+        int green = 102;
+        int blue = 204;
+        int alpha = 255;
+        NotifyMe.Builder notifyMe = new NotifyMe.Builder(mApplicationContext);
+        notifyMe.title(contact.getUserName());
+        notifyMe.content(newMessage);
+        notifyMe.color(red, green, blue, alpha);//Color of notification header
+        notifyMe.delay(1000);//Delay in ms
+        notifyMe.key("new_message");
+        notifyMe.build();
     }
 
     public void notifySendMessage(String jid, String messageBody, boolean success) {
@@ -213,7 +248,7 @@ class RosterManager {
 
     public void notifyContactAdded(Collection<Jid> addresses) {
         ContactRepository.getInstance().addContacts(addresses);
-        updateRoster();
+        loadContacts();
         for (OnRosterUpdatesListener listener : mRosterUpdatesListeners) {
             listener.onAddContact(addresses);
         }
@@ -221,7 +256,7 @@ class RosterManager {
 
     public void notifyContactUpdated(Collection<Jid> addresses) {
         ContactRepository.getInstance().updateContacts(addresses);
-        updateRoster();
+        loadContacts();
         for (OnRosterUpdatesListener listener : mRosterUpdatesListeners) {
             listener.onUpdateContact(addresses);
         }
@@ -229,7 +264,7 @@ class RosterManager {
 
     public void notifyContactRemoved(Collection<Jid> addresses) {
         ContactRepository.getInstance().updateContacts(addresses);
-        updateRoster();
+        loadContacts();
         for (OnRosterUpdatesListener listener : mRosterUpdatesListeners) {
             listener.onRemoveContact(addresses);
         }
@@ -237,12 +272,12 @@ class RosterManager {
 
     public void notifyConntectionState(XMPPConnection connection, RosterConnection.ConnectionState connectionState) {
         mConnectionState = connectionState;
-        updateRoster();
+        loadContacts();
         for (OnConnectionStateListener listener : mConnectionStateListeners) {
             listener.onConnectionStateChange(connectionState);
         }
-        setAuthenticateTime(System.currentTimeMillis());
         if(connectionState.equals(RosterConnection.ConnectionState.AUTHENTICATED)){
+            setAuthenticateTime(System.currentTimeMillis());
             updateRoster();
         }
     }
@@ -264,8 +299,9 @@ class RosterManager {
 
     public void cleanUpManager() {
         MessageRepository.getInstance().cleanUpMessages();
+        ContactRepository.getInstance().cleanUpContacts();
         if (mMessageChangeListeners != null) mMessageChangeListeners.clear();
-        if (mConnectionStateListeners != null) mConnectionStateListeners.clear();
+//        if (mConnectionStateListeners != null) mConnectionStateListeners.clear();
         if (mRosterUpdatesListeners != null) mRosterUpdatesListeners.clear();
     }
 
@@ -278,6 +314,10 @@ class RosterManager {
 
     public void setRoster(Roster roster) {
         mRoster = roster;
+    }
+
+    public void enableNotifications(boolean enable) {
+        mShowNotifications = enable;
     }
 
     public interface OnMessageChangeListener {
