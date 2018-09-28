@@ -1,6 +1,7 @@
 package com.nfs.mobility.chat;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -8,11 +9,15 @@ import android.util.Log;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.roster.Roster;
+import org.jivesoftware.smack.roster.RosterEntry;
 import org.jxmpp.jid.Jid;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -34,9 +39,11 @@ class RosterManager {
     }
 
 
-    Set<OnMessageChangeListener> mMessageChangeListeners = new CopyOnWriteArraySet<>();
-    Set<OnRosterUpdatesListener> mRosterUpdatesListeners = new CopyOnWriteArraySet<>();
-    Set<OnConnectionStateListener> mConnectionStateListeners = new CopyOnWriteArraySet<>();
+    private Set<OnMessageChangeListener> mMessageChangeListeners = new CopyOnWriteArraySet<>();
+    private Set<OnRosterUpdatesListener> mRosterUpdatesListeners = new CopyOnWriteArraySet<>();
+    private Set<OnConnectionStateListener> mConnectionStateListeners = new CopyOnWriteArraySet<>();
+
+    Context mContext;
 
     Long authenticateTime;
 
@@ -62,17 +69,41 @@ class RosterManager {
         }
     }
 
-    public void init(final Context context, final String jid, final String password){
+    public void init(final Context context){
         /**
          * Initiate Connection
          * Notify Connected
          * Notify Authenticate
          * Notify Failure
          */
+        mContext = context.getApplicationContext();
+        initiateThread();
+    }
+
+    public void connectUser(final String jid, final String password) {
+        if(mContext == null) throw new IllegalStateException("Initiation Exception: Initiate RosterManager First, RosterManager.init()");
+
+        if(mThread == null) throw new IllegalStateException("Initiation Exception: Initiate RosterManager First, Thread is not initialized");
+        if(mTHandler == null) throw new IllegalStateException("Initiation Exception: Initiate RosterManager First, Thread Handler is not initialized");
+
         mTHandler.post(new Runnable() {
             @Override
             public void run() {
-                initConnection(context.getApplicationContext(), jid, password);
+                initConnection(mContext, jid, password);
+            }
+        });
+    }
+
+    public void disconnectUser(){
+        if(mContext == null) throw new IllegalStateException("Initiation Exception: Initiate RosterManager First, RosterManager.init()");
+
+        if(mThread == null) throw new IllegalStateException("Initiation Exception: Initiate RosterManager First, Thread is not initialized");
+        if(mTHandler == null) throw new IllegalStateException("Initiation Exception: Initiate RosterManager First, Thread Handler is not initialized");
+
+        mTHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                closeConnection();
             }
         });
     }
@@ -91,8 +122,50 @@ class RosterManager {
         }
     }
 
-    private void loadContacts(){
+    private void closeConnection() {
+        if (mConnection != null) {
+            mConnection.disconnect();
+        }
+    }
 
+    public void updateRoster() {
+        if (mConnection == null) return;
+        try {
+            mConnection.reloadRosterAndWait();
+            updateContacts();
+        } catch (SmackException.NotLoggedInException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (SmackException.NotConnectedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void updateContacts() {
+
+        if(mConnection == null || mConnection.getRoster() == null) return;
+//        Roster roster = mConnection.getRoster();
+
+        Collection<RosterEntry> entries = mRoster.getEntries(); //
+        Collection<Jid> addresses = new ArrayList<>();
+        Log.e(TAG, entries.toString());
+        List<Contact> mContacts = new ArrayList<>(); //
+        for (RosterEntry entry : entries) {
+            //HashMap<String, String> map = new HashMap<String,String>();
+            Presence entryPresence = mRoster.getPresence(entry.getJid());
+            Presence.Type type = entryPresence.getType();
+            Contact contact = new Contact(entry.getName(), type.toString(), entry.getJid().toString());
+            Log.e(TAG, contact.toString());
+            mContacts.add(contact);
+            addresses.add(entry.getJid());
+        }
+        ContactRepository.getInstance().setContacts(mContacts);
+
+        for(OnRosterUpdatesListener listener : mRosterUpdatesListeners){
+            listener.onUpdateContact(addresses);
+        }
+        return;
     }
 
     public Long getAuthenticateTime() {
@@ -135,6 +208,7 @@ class RosterManager {
 
     public void notifyContactAdded(Collection<Jid> addresses) {
         ContactRepository.getInstance().addContacts(addresses);
+        updateRoster();
         for (OnRosterUpdatesListener listener : mRosterUpdatesListeners) {
             listener.onAddContact(addresses);
         }
@@ -142,6 +216,7 @@ class RosterManager {
 
     public void notifyContactUpdated(Collection<Jid> addresses) {
         ContactRepository.getInstance().updateContacts(addresses);
+        updateRoster();
         for (OnRosterUpdatesListener listener : mRosterUpdatesListeners) {
             listener.onUpdateContact(addresses);
         }
@@ -149,6 +224,7 @@ class RosterManager {
 
     public void notifyContactRemoved(Collection<Jid> addresses) {
         ContactRepository.getInstance().updateContacts(addresses);
+        updateRoster();
         for (OnRosterUpdatesListener listener : mRosterUpdatesListeners) {
             listener.onRemoveContact(addresses);
         }
@@ -156,11 +232,13 @@ class RosterManager {
 
     public void notifyConntectionState(XMPPConnection connection, RosterConnection.ConnectionState connectionState) {
         mConnectionState = connectionState;
+        updateRoster();
         for (OnConnectionStateListener listener : mConnectionStateListeners) {
             listener.onConnectionStateChange(connectionState);
         }
+        setAuthenticateTime(System.currentTimeMillis());
         if(connectionState.equals(RosterConnection.ConnectionState.AUTHENTICATED)){
-
+            updateRoster();
         }
     }
 
@@ -211,8 +289,6 @@ class RosterManager {
         void onRemoveContact(Collection<Jid> addresses);
 
         void onUpdateContact(Collection<Jid> addresses);
-
-        void onDeleteContact();
 
         void onAddContact(Collection<Jid> addresses);
     }

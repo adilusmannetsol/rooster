@@ -129,19 +129,10 @@ public class RosterConnection implements ConnectionListener {
         mConnection = new XMPPTCPConnection(conf);
 
         mConnection.addConnectionListener(this);
-        try {
-            Log.d(TAG, "Calling connect() ");
-            mConnection.connect();
-            mConnection.login(mUsername, mPassword);
-            Log.d(TAG, " login() Called ");
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
 
         ChatManager.getInstanceFor(mConnection).addIncomingListener(new IncomingChatMessageListener() {
             @Override
             public void newIncomingMessage(EntityBareJid messageFrom, Message message, Chat chat) {
-                ///ADDED
                 Log.d(TAG, "message.getBody() :" + message.getBody());
                 Log.d(TAG, "message.getFrom() :" + message.getFrom());
 
@@ -156,22 +147,20 @@ public class RosterConnection implements ConnectionListener {
                     contactJid = from;
                 }
 
-                //Bundle up the intent and send the broadcast.
-//                Intent intent = new Intent(RosterConnectionService.NEW_MESSAGE);
-//                intent.setPackage(mApplicationContext.getPackageName());
-//                intent.putExtra(RosterConnectionService.BUNDLE_FROM_JID, contactJid);
-//                intent.putExtra(RosterConnectionService.BUNDLE_MESSAGE_BODY, message.getBody());
-//                mApplicationContext.sendBroadcast(intent);
-//                Log.e(TAG, "Received message from :" + contactJid + " broadcast sent.");
-
-
                 Log.e(TAG, "Received message from :" + contactJid + " data sent.");
                 RosterManager.getInstance().notifyRecieveMessage(contactJid, message.getBody());
 
-                ///ADDED
-
             }
         });
+
+        try {
+            Log.d(TAG, "Calling connect() ");
+            mConnection.connect();
+            mConnection.login(mUsername, mPassword);
+            Log.d(TAG, " login() Called ");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
 
         ReconnectionManager reconnectionManager = ReconnectionManager.getInstanceFor(mConnection);
@@ -261,7 +250,6 @@ public class RosterConnection implements ConnectionListener {
     @Override
     public void authenticated(XMPPConnection connection, boolean resumed) {
         RosterConnectionService.sConnectionState = ConnectionState.CONNECTED;
-        RosterManager.getInstance().notifyConntectionState(connection, ConnectionState.AUTHENTICATED);
         Log.d(TAG, "Authenticated Successfully");
         mRoster = Roster.getInstanceFor(connection); //
         RosterManager.getInstance().setRoster(mRoster);
@@ -287,19 +275,14 @@ public class RosterConnection implements ConnectionListener {
             @Override
             public void presenceChanged(Presence presence) {
                 Log.e("entry", "Presence changed: " + presence.getFrom() + " " + presence);
-
-                //Bundle up the intent and send the broadcast.
-//                Intent intent = new Intent(RosterConnectionService.PRESENCE_CHANGED);
-//                intent.setPackage(mApplicationContext.getPackageName());
-//                intent.putExtra(RosterConnectionService.BUNDLE_FROM_JID, presence.getFrom().asBareJid().toString());
-//                intent.putExtra(RosterConnectionService.BUNDLE_PRESENCE_TYPE, presence.getType().toString());
-//                mApplicationContext.sendBroadcast(intent);
                 Log.e(TAG, "Presence Changed :" + presence.getFrom() + " update: " + presence.getType());
                 RosterManager.getInstance().notifyPresenceChanged(presence.getFrom().asBareJid().toString(), presence.getType().toString());
             }
         });
 
-        showContactListActivityWhenAuthenticated();
+        RosterManager.getInstance().notifyConntectionState(connection, ConnectionState.AUTHENTICATED);
+
+//        showContactListActivityWhenAuthenticated();
     }
 
     public Roster getRoster() {
