@@ -114,8 +114,8 @@ public class LoginActivity extends AppCompatActivity {
                         Log.d(TAG, "Got a broadcast to show the main app window");
                         //Show the main app window
                         showProgress(false);
-                        Intent i2 = new Intent(mContext, ChatListActivity.class);
-                        i2 = new Intent(mContext, ContactListActivity.class);
+                        Intent i2 = new Intent(mContext, ChatContactsActivity.class);
+                        i2 = new Intent(mContext, TestChatActivity.class);
                         startActivity(i2);
                         finish();
                         break;
@@ -220,7 +220,7 @@ public class LoginActivity extends AppCompatActivity {
             //showProgress(true);
             //This is where the login login is fired up.
 //            Log.d(TAG,"Jid and password are valid ,proceeding with login.");
-//            startActivity(new Intent(this,ContactListActivity.class));
+//            startActivity(new Intent(this,TestChatActivity.class));
 
             //Save the credentials and login
             saveCredentialsAndLogin();
@@ -319,8 +319,8 @@ public class LoginActivity extends AppCompatActivity {
 
     @UiThread
     void loadContactListActivity() {
-        Intent intentContactList = new Intent(mContext, ChatListActivity.class);
-        intentContactList = new Intent(mContext, ContactListActivity.class);
+        Intent intentContactList = new Intent(mContext, ChatContactsActivity.class);
+        intentContactList = new Intent(mContext, TestChatActivity.class);
         startActivity(intentContactList);
         finish();
     }
