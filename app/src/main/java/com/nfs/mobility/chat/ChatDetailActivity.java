@@ -16,7 +16,7 @@ import com.blikoon.roster.R;
  * An activity representing a single Item detail screen. This
  * activity is only used on narrow width devices. On tablet-size devices,
  * item details are presented side-by-side with a list of items
- * in a {@link ChatListActivity}.
+ * in a {@link ChatContactsActivity}.
  */
 public class ChatDetailActivity extends AppCompatActivity {
 
@@ -55,9 +55,9 @@ public class ChatDetailActivity extends AppCompatActivity {
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
             Bundle arguments = new Bundle();
-            arguments.putString(ChatDetailFragment.ARG_ITEM_JID,
-                    getIntent().getStringExtra(ChatDetailFragment.ARG_ITEM_JID));
-            ChatDetailFragment fragment = new ChatDetailFragment();
+            arguments.putString(ChatMessagesFragment.ARG_ITEM_JID,
+                    getIntent().getStringExtra(ChatMessagesFragment.ARG_ITEM_JID));
+            ChatMessagesFragment fragment = new ChatMessagesFragment();
             fragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.item_detail_container, fragment)
@@ -75,7 +75,7 @@ public class ChatDetailActivity extends AppCompatActivity {
             //
             // http://developer.android.com/design/patterns/navigation.html#up-vs-back
             //
-            navigateUpTo(new Intent(this, ChatListActivity.class));
+            navigateUpTo(new Intent(this, ChatContactsActivity.class));
             return true;
         }
         return super.onOptionsItemSelected(item);

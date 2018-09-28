@@ -18,7 +18,6 @@ import com.blikoon.roster.R;
 
 import org.jxmpp.jid.Jid;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -32,14 +31,14 @@ import co.intentservice.chatui.models.ChatMessage;
  * item details. On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
-public class ChatListActivity extends AppCompatActivity {
+public class ChatContactsActivity extends AppCompatActivity {
 
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
      * device.
      */
 
-    private static final String TAG = ChatListActivity.class.getSimpleName();
+    private static final String TAG = ChatContactsActivity.class.getSimpleName();
 
     private boolean mTwoPane;
 
@@ -97,8 +96,8 @@ public class ChatListActivity extends AppCompatActivity {
 
             if (mTwoPane) {
                 Bundle arguments = new Bundle();
-                arguments.putString(ChatDetailFragment.ARG_ITEM_JID, Jid);
-                ChatDetailFragment fragment = new ChatDetailFragment();
+                arguments.putString(ChatMessagesFragment.ARG_ITEM_JID, Jid);
+                ChatMessagesFragment fragment = new ChatMessagesFragment();
                 fragment.setArguments(arguments);
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.item_detail_container, fragment)
@@ -106,7 +105,7 @@ public class ChatListActivity extends AppCompatActivity {
             } else {
 //                Context context = getApplicationContext();//TODO
 //                Intent intent = new Intent(context, ChatDetailActivity.class);//TODO
-//                intent.putExtra(ChatDetailFragment.ARG_ITEM_JID, Jid);//TODO
+//                intent.putExtra(ChatMessagesFragment.ARG_ITEM_JID, Jid);//TODO
 ////TODO
 //                context.startActivity(intent);//TODO
             }
@@ -258,11 +257,6 @@ public class ChatListActivity extends AppCompatActivity {
 
         @Override
         public void onUpdateContact(Collection<Jid> addresses) {
-
-        }
-
-        @Override
-        public void onDeleteContact() {
 
         }
 

@@ -1,10 +1,6 @@
 package com.nfs.mobility.chat;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.os.Handler;
 import android.support.annotation.UiThread;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -29,9 +25,9 @@ import java.util.List;
 import co.intentservice.chatui.ChatView;
 import co.intentservice.chatui.models.ChatMessage;
 
-public class ContactListActivity extends AppCompatActivity {
+public class TestChatActivity extends AppCompatActivity {
 
-    private static final String TAG = ContactListActivity.class.getSimpleName();
+    private static final String TAG = TestChatActivity.class.getSimpleName();
 
 
     private String contactJid;
