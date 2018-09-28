@@ -91,7 +91,6 @@ public class LoginActivity extends AppCompatActivity {
         mContext = this;
 
         RosterManager.getInstance().init(this);
-        RosterManager.getInstance().enableNotifications(true);
         RosterManager.getInstance().addOnConnectionStateListener(connectionStateListener);
 
     }
@@ -116,7 +115,7 @@ public class LoginActivity extends AppCompatActivity {
                         //Show the main app window
                         showProgress(false);
                         Intent i2 = new Intent(mContext, ChatContactsActivity.class);
-                        i2 = new Intent(mContext, TestChatActivity.class);
+                        //i2 = new Intent(mContext, TestChatActivity.class);
                         startActivity(i2);
                         finish();
                         break;
@@ -321,7 +320,7 @@ public class LoginActivity extends AppCompatActivity {
     @UiThread
     void loadContactListActivity() {
         Intent intentContactList = new Intent(mContext, ChatContactsActivity.class);
-//        intentContactList = new Intent(mApplicationContext, TestChatActivity.class);
+        //intentContactList = new Intent(mContext, TestChatActivity.class);
         startActivity(intentContactList);
         finish();
     }
