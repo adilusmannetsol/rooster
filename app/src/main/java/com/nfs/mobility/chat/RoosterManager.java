@@ -90,7 +90,7 @@ class RoosterManager {
         mMessageChangeListeners.add(messageChangeListener);
     }
 
-    public void removeMessageChangeListener(OnMessageChangeListener messageChangeListener) {
+    public void removeOnMessageChangeListener(OnMessageChangeListener messageChangeListener) {
         mMessageChangeListeners.remove(messageChangeListener);
     }
 

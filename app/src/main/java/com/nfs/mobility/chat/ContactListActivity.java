@@ -19,7 +19,10 @@ import android.widget.Toast;
 
 import com.blikoon.rooster.R;
 
+import org.jxmpp.jid.Jid;
+
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import co.intentservice.chatui.ChatView;
@@ -58,6 +61,7 @@ public class ContactListActivity extends AppCompatActivity {
         contactsRecyclerView.setAdapter(mAdapter);
 
         RoosterManager.getInstance().addOnMessageChangeListener(messageChangeListener);
+        RoosterManager.getInstance().addOnRoosterChangeListener(roosterUpdatesListener);
     }
 
     ContactListActionListener listActionListener = new ContactListActionListener() {
@@ -213,6 +217,51 @@ public class ContactListActivity extends AppCompatActivity {
 
     }
 
+    //region RoosterManager
+    @Override
+    protected void onDestroy() {
+        cleanUpRoosterListners();
+        super.onDestroy();
+    }
+
+
+    void cleanUpRoosterListners() {
+        RoosterManager.getInstance().removeOnMessageChangeListener(messageChangeListener);
+        RoosterManager.getInstance().removeOnRoosterChangeListener(roosterUpdatesListener);
+    }
+
+    RoosterManager.OnRoosterUpdatesListener roosterUpdatesListener = new RoosterManager.OnRoosterUpdatesListener() {
+        @Override
+        public void onChangePresence(String jid, String status) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mAdapter.update(ContactRepository.getInstance().getContacts());
+                }
+            });
+        }
+
+        @Override
+        public void onRemoveContact(Collection<Jid> addresses) {
+
+        }
+
+        @Override
+        public void onUpdateContact(Collection<Jid> addresses) {
+
+        }
+
+        @Override
+        public void onDeleteContact() {
+
+        }
+
+        @Override
+        public void onAddContact(Collection<Jid> addresses) {
+
+        }
+    };
+
     RoosterManager.OnMessageChangeListener messageChangeListener = new RoosterManager.OnMessageChangeListener() {
         @Override
         public void onMessageReceived(String fromJID, String newMessage, int totalCount) {
@@ -246,6 +295,7 @@ public class ContactListActivity extends AppCompatActivity {
 
         }
     };
+    //endregion
 
 
 }
