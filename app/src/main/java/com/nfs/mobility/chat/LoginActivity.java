@@ -111,7 +111,7 @@ public class LoginActivity extends AppCompatActivity {
                         Log.d(TAG, "Got a broadcast to show the main app window");
                         //Show the main app window
                         showProgress(false);
-                        Intent i2 = new Intent(mContext, ContactListActivity.class);
+                        Intent i2 = new Intent(mContext, ChatListActivity.class);
                         startActivity(i2);
                         finish();
                         break;
