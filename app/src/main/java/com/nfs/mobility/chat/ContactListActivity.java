@@ -144,61 +144,61 @@ public class ContactListActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        mBroadcastReceiverNewMessage = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                String action = intent.getAction();
-                switch (action) {
-                    case RoosterConnectionService.NEW_MESSAGE:
-                        String from = intent.getStringExtra(RoosterConnectionService.BUNDLE_FROM_JID);
-                        String body = intent.getStringExtra(RoosterConnectionService.BUNDLE_MESSAGE_BODY);
+//        mBroadcastReceiverNewMessage = new BroadcastReceiver() {
+//            @Override
+//            public void onReceive(Context context, Intent intent) {
+//                String action = intent.getAction();
+//                switch (action) {
+//                    case RoosterConnectionService.NEW_MESSAGE:
+//                        String from = intent.getStringExtra(RoosterConnectionService.BUNDLE_FROM_JID);
+//                        String body = intent.getStringExtra(RoosterConnectionService.BUNDLE_MESSAGE_BODY);
+//
+//                        Log.e(TAG, "NEW_MESSAGE: From: " + from + " Body: " + body);
+//
+//                        if (from.equals(contactJid)) {
+//                            ChatMessage chatMessage = new ChatMessage(body, System.currentTimeMillis(), ChatMessage.Type.RECEIVED);
+//                            mChatView.addMessage(chatMessage);
+//
+//                        } else {
+//                            Log.d(TAG, "Got a message from jid :" + from);
+//                        }
+//
+//                        return;
+//                }
+//
+//            }
+//        };
+//
+//        IntentFilter filterNewMessage = new IntentFilter(RoosterConnectionService.NEW_MESSAGE);
+//        registerReceiver(mBroadcastReceiverNewMessage, filterNewMessage);
 
-                        Log.e(TAG, "NEW_MESSAGE: From: " + from + " Body: " + body);
-
-                        if (from.equals(contactJid)) {
-                            ChatMessage chatMessage = new ChatMessage(body, System.currentTimeMillis(), ChatMessage.Type.RECEIVED);
-                            mChatView.addMessage(chatMessage);
-
-                        } else {
-                            Log.d(TAG, "Got a message from jid :" + from);
-                        }
-
-                        return;
-                }
-
-            }
-        };
-
-        IntentFilter filterNewMessage = new IntentFilter(RoosterConnectionService.NEW_MESSAGE);
-        registerReceiver(mBroadcastReceiverNewMessage, filterNewMessage);
-
-        mBroadcastReceiverPresenceChanged = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                String action = intent.getAction();
-                switch (action) {
-                    case RoosterConnectionService.PRESENCE_CHANGED:
-                        String from = intent.getStringExtra(RoosterConnectionService.BUNDLE_FROM_JID);
-                        String type = intent.getStringExtra(RoosterConnectionService.BUNDLE_PRESENCE_TYPE);
-
-                        Log.e(TAG, "Presence from: " + from + " updated to " + type);
-
-                        for (Contact contact : ContactRepository.getInstance().getContacts()) {
-                            if (contact.getJid().equals(from)) {
-                                contact.setStatus(type);
-                            }
-                        }
-
-                        mAdapter.update(ContactRepository.getInstance().getContacts());
-
-                        return;
-                }
-
-            }
-        };
-
-        IntentFilter filterPresenceChanged = new IntentFilter(RoosterConnectionService.PRESENCE_CHANGED);
-        registerReceiver(mBroadcastReceiverPresenceChanged, filterPresenceChanged);
+//        mBroadcastReceiverPresenceChanged = new BroadcastReceiver() {
+//            @Override
+//            public void onReceive(Context context, Intent intent) {
+//                String action = intent.getAction();
+//                switch (action) {
+//                    case RoosterConnectionService.PRESENCE_CHANGED:
+//                        String from = intent.getStringExtra(RoosterConnectionService.BUNDLE_FROM_JID);
+//                        String type = intent.getStringExtra(RoosterConnectionService.BUNDLE_PRESENCE_TYPE);
+//
+//                        Log.e(TAG, "Presence from: " + from + " updated to " + type);
+//
+//                        for (Contact contact : ContactRepository.getInstance().getContacts()) {
+//                            if (contact.getJid().equals(from)) {
+//                                contact.setStatus(type);
+//                            }
+//                        }
+//
+//                        mAdapter.update(ContactRepository.getInstance().getContacts());
+//
+//                        return;
+//                }
+//
+//            }
+//        };
+//
+//        IntentFilter filterPresenceChanged = new IntentFilter(RoosterConnectionService.PRESENCE_CHANGED);
+//        registerReceiver(mBroadcastReceiverPresenceChanged, filterPresenceChanged);
 
         mBroadcastReceiverContactsUpdated = new BroadcastReceiver() {
             @Override
