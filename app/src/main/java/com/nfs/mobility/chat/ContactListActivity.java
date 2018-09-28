@@ -17,7 +17,7 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.blikoon.rooster.R;
+import com.blikoon.roster.R;
 
 import org.jxmpp.jid.Jid;
 
@@ -49,7 +49,7 @@ public class ContactListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_contact_list);
 
-        mChatView = (ChatView) findViewById(R.id.rooster_chat_view);
+        mChatView = (ChatView) findViewById(R.id.roster_chat_view);
         notSelectedTxt = (TextView) findViewById(R.id.not_selected_chat_account_txt);
         contactsRecyclerView = (RecyclerView) findViewById(R.id.contact_list_online_recycler_view);
         contactsRecyclerView.setLayoutManager(new LinearLayoutManager(getBaseContext()));
@@ -60,8 +60,8 @@ public class ContactListActivity extends AppCompatActivity {
         mAdapter = new ContactAdapter(contacts,listActionListener);
         contactsRecyclerView.setAdapter(mAdapter);
 
-        RoosterManager.getInstance().addOnMessageChangeListener(messageChangeListener);
-        RoosterManager.getInstance().addOnRoosterChangeListener(roosterUpdatesListener);
+        RosterManager.getInstance().addOnMessageChangeListener(messageChangeListener);
+        RosterManager.getInstance().addOnRosterChangeListener(rosterUpdatesListener);
     }
 
     ContactListActionListener listActionListener = new ContactListActionListener() {
@@ -79,14 +79,14 @@ public class ContactListActivity extends AppCompatActivity {
                 @Override
                 public boolean sendMessage(ChatMessage chatMessage) {
                     // perform actual message sending
-                    if (RoosterConnectionService.getState().equals(RoosterConnection.ConnectionState.CONNECTED)) {
+                    if (RosterConnectionService.getState().equals(RosterConnection.ConnectionState.CONNECTED)) {
                         Log.d(TAG, "The client is connected to the server,Sending Message");
                         //Send the message to the server
 
-                        Intent intent = new Intent(RoosterConnectionService.SEND_MESSAGE);
-                        intent.putExtra(RoosterConnectionService.BUNDLE_MESSAGE_BODY,
+                        Intent intent = new Intent(RosterConnectionService.SEND_MESSAGE);
+                        intent.putExtra(RosterConnectionService.BUNDLE_MESSAGE_BODY,
                                 mChatView.getTypedMessage());
-                        intent.putExtra(RoosterConnectionService.BUNDLE_TO, Jid);
+                        intent.putExtra(RosterConnectionService.BUNDLE_TO, Jid);
 
                         sendBroadcast(intent);
 
@@ -114,10 +114,10 @@ public class ContactListActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.rooster_logout) {
+        if (item.getItemId() == R.id.roster_logout) {
             //Disconnect from server
             Log.d(TAG, "Initiating the log out process");
-            Intent i1 = new Intent(this, RoosterConnectionService.class);
+            Intent i1 = new Intent(this, RosterConnectionService.class);
             stopService(i1);
 
             //Finish this activity
@@ -149,9 +149,9 @@ public class ContactListActivity extends AppCompatActivity {
 //            public void onReceive(Context context, Intent intent) {
 //                String action = intent.getAction();
 //                switch (action) {
-//                    case RoosterConnectionService.NEW_MESSAGE:
-//                        String from = intent.getStringExtra(RoosterConnectionService.BUNDLE_FROM_JID);
-//                        String body = intent.getStringExtra(RoosterConnectionService.BUNDLE_MESSAGE_BODY);
+//                    case RosterConnectionService.NEW_MESSAGE:
+//                        String from = intent.getStringExtra(RosterConnectionService.BUNDLE_FROM_JID);
+//                        String body = intent.getStringExtra(RosterConnectionService.BUNDLE_MESSAGE_BODY);
 //
 //                        Log.e(TAG, "NEW_MESSAGE: From: " + from + " Body: " + body);
 //
@@ -169,7 +169,7 @@ public class ContactListActivity extends AppCompatActivity {
 //            }
 //        };
 //
-//        IntentFilter filterNewMessage = new IntentFilter(RoosterConnectionService.NEW_MESSAGE);
+//        IntentFilter filterNewMessage = new IntentFilter(RosterConnectionService.NEW_MESSAGE);
 //        registerReceiver(mBroadcastReceiverNewMessage, filterNewMessage);
 
 //        mBroadcastReceiverPresenceChanged = new BroadcastReceiver() {
@@ -177,9 +177,9 @@ public class ContactListActivity extends AppCompatActivity {
 //            public void onReceive(Context context, Intent intent) {
 //                String action = intent.getAction();
 //                switch (action) {
-//                    case RoosterConnectionService.PRESENCE_CHANGED:
-//                        String from = intent.getStringExtra(RoosterConnectionService.BUNDLE_FROM_JID);
-//                        String type = intent.getStringExtra(RoosterConnectionService.BUNDLE_PRESENCE_TYPE);
+//                    case RosterConnectionService.PRESENCE_CHANGED:
+//                        String from = intent.getStringExtra(RosterConnectionService.BUNDLE_FROM_JID);
+//                        String type = intent.getStringExtra(RosterConnectionService.BUNDLE_PRESENCE_TYPE);
 //
 //                        Log.e(TAG, "Presence from: " + from + " updated to " + type);
 //
@@ -197,7 +197,7 @@ public class ContactListActivity extends AppCompatActivity {
 //            }
 //        };
 //
-//        IntentFilter filterPresenceChanged = new IntentFilter(RoosterConnectionService.PRESENCE_CHANGED);
+//        IntentFilter filterPresenceChanged = new IntentFilter(RosterConnectionService.PRESENCE_CHANGED);
 //        registerReceiver(mBroadcastReceiverPresenceChanged, filterPresenceChanged);
 
         mBroadcastReceiverContactsUpdated = new BroadcastReceiver() {
@@ -205,32 +205,32 @@ public class ContactListActivity extends AppCompatActivity {
             public void onReceive(Context context, Intent intent) {
                 String action = intent.getAction();
                 switch (action) {
-                    case RoosterConnectionService.CONTACTS_UPDATED:
+                    case RosterConnectionService.CONTACTS_UPDATED:
                         mAdapter.update(ContactRepository.getInstance().getContacts());
                         return;
                 }
             }
         };
 
-        IntentFilter filterContactsUpdated = new IntentFilter(RoosterConnectionService.CONTACTS_UPDATED);
+        IntentFilter filterContactsUpdated = new IntentFilter(RosterConnectionService.CONTACTS_UPDATED);
         registerReceiver(mBroadcastReceiverContactsUpdated, filterContactsUpdated);
 
     }
 
-    //region RoosterManager
+    //region RosterManager
     @Override
     protected void onDestroy() {
-        cleanUpRoosterListeners();
+        cleanUpRosterListeners();
         super.onDestroy();
     }
 
 
-    void cleanUpRoosterListeners() {
-        RoosterManager.getInstance().removeOnMessageChangeListener(messageChangeListener);
-        RoosterManager.getInstance().removeOnRoosterChangeListener(roosterUpdatesListener);
+    void cleanUpRosterListeners() {
+        RosterManager.getInstance().removeOnMessageChangeListener(messageChangeListener);
+        RosterManager.getInstance().removeOnRosterChangeListener(rosterUpdatesListener);
     }
 
-    RoosterManager.OnRoosterUpdatesListener roosterUpdatesListener = new RoosterManager.OnRoosterUpdatesListener() {
+    RosterManager.OnRosterUpdatesListener rosterUpdatesListener = new RosterManager.OnRosterUpdatesListener() {
         @Override
         public void onChangePresence(String jid, String status) {
             runOnUiThread(new Runnable() {
@@ -262,7 +262,7 @@ public class ContactListActivity extends AppCompatActivity {
         }
     };
 
-    RoosterManager.OnMessageChangeListener messageChangeListener = new RoosterManager.OnMessageChangeListener() {
+    RosterManager.OnMessageChangeListener messageChangeListener = new RosterManager.OnMessageChangeListener() {
         @Override
         public void onMessageReceived(String fromJID, String newMessage, int totalCount) {
             Log.e(TAG, "OnMessageChangeListener: onMessageReceived: " + fromJID + " ---> " + newMessage + " ---> " + totalCount);

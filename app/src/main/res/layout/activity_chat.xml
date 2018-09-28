@@ -9,13 +9,13 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.blikoon.rooster.com.nfs.mobility.chat.ChatActivity">
+    tools:context="com.blikoon.roster.com.nfs.mobility.chat.ChatActivity">
 
 
 
 
     <co.intentservice.chatui.ChatView
-        android:id="@+id/rooster_chat_view"
+        android:id="@+id/roster_chat_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
 

@@ -8,7 +8,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.blikoon.rooster.R;
+import com.blikoon.roster.R;
 
 import org.jivesoftware.smack.packet.Presence;
 

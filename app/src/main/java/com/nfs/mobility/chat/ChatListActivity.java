@@ -13,7 +13,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
-import com.blikoon.rooster.R;
+import com.blikoon.roster.R;
 
 import java.util.List;
 
@@ -117,10 +117,10 @@ public class ChatListActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.rooster_logout) {
+        if (item.getItemId() == R.id.roster_logout) {
             //Disconnect from server
             Log.d(TAG, "Initiating the log out process");
-            Intent i1 = new Intent(this, RoosterConnectionService.class);
+            Intent i1 = new Intent(this, RosterConnectionService.class);
             stopService(i1);
 
             //Finish this activity
@@ -151,9 +151,9 @@ public class ChatListActivity extends AppCompatActivity {
             public void onReceive(Context context, Intent intent) {
                 String action = intent.getAction();
                 switch (action) {
-                    case RoosterConnectionService.NEW_MESSAGE:
-                        String from = intent.getStringExtra(RoosterConnectionService.BUNDLE_FROM_JID);
-                        String body = intent.getStringExtra(RoosterConnectionService.BUNDLE_MESSAGE_BODY);
+                    case RosterConnectionService.NEW_MESSAGE:
+                        String from = intent.getStringExtra(RosterConnectionService.BUNDLE_FROM_JID);
+                        String body = intent.getStringExtra(RosterConnectionService.BUNDLE_MESSAGE_BODY);
 
                         Log.e(TAG, "NEW_MESSAGE: From: " + from + " Body: " + body);
 
@@ -171,7 +171,7 @@ public class ChatListActivity extends AppCompatActivity {
             }
         };
 
-        IntentFilter filterNewMessage = new IntentFilter(RoosterConnectionService.NEW_MESSAGE);
+        IntentFilter filterNewMessage = new IntentFilter(RosterConnectionService.NEW_MESSAGE);
         registerReceiver(mBroadcastReceiverNewMessage, filterNewMessage);
 
         mBroadcastReceiverPresenceChanged = new BroadcastReceiver() {
@@ -179,9 +179,9 @@ public class ChatListActivity extends AppCompatActivity {
             public void onReceive(Context context, Intent intent) {
                 String action = intent.getAction();
                 switch (action) {
-                    case RoosterConnectionService.PRESENCE_CHANGED:
-                        String from = intent.getStringExtra(RoosterConnectionService.BUNDLE_FROM_JID);
-                        String type = intent.getStringExtra(RoosterConnectionService.BUNDLE_PRESENCE_TYPE);
+                    case RosterConnectionService.PRESENCE_CHANGED:
+                        String from = intent.getStringExtra(RosterConnectionService.BUNDLE_FROM_JID);
+                        String type = intent.getStringExtra(RosterConnectionService.BUNDLE_PRESENCE_TYPE);
 
                         Log.e(TAG, "Presence from: " + from + " updated to " + type);
 
@@ -199,7 +199,7 @@ public class ChatListActivity extends AppCompatActivity {
             }
         };
 
-        IntentFilter filterPresenceChanged = new IntentFilter(RoosterConnectionService.PRESENCE_CHANGED);
+        IntentFilter filterPresenceChanged = new IntentFilter(RosterConnectionService.PRESENCE_CHANGED);
         registerReceiver(mBroadcastReceiverPresenceChanged, filterPresenceChanged);
 
         mBroadcastReceiverContactsUpdated = new BroadcastReceiver() {
@@ -207,14 +207,14 @@ public class ChatListActivity extends AppCompatActivity {
             public void onReceive(Context context, Intent intent) {
                 String action = intent.getAction();
                 switch (action) {
-                    case RoosterConnectionService.CONTACTS_UPDATED:
+                    case RosterConnectionService.CONTACTS_UPDATED:
                         mAdapter.update(ContactModel.getInstance().getContacts());
                         return;
                 }
             }
         };
 
-        IntentFilter filterContactsUpdated = new IntentFilter(RoosterConnectionService.CONTACTS_UPDATED);
+        IntentFilter filterContactsUpdated = new IntentFilter(RosterConnectionService.CONTACTS_UPDATED);
         registerReceiver(mBroadcastReceiverContactsUpdated, filterContactsUpdated);
         }
 

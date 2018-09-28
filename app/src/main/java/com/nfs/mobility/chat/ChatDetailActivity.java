@@ -10,7 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.ActionBar;
 import android.view.MenuItem;
 
-import com.blikoon.rooster.R;
+import com.blikoon.roster.R;
 
 /**
  * An activity representing a single Item detail screen. This

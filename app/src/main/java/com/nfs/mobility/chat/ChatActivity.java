@@ -10,7 +10,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 
-import com.blikoon.rooster.R;
+import com.blikoon.roster.R;
 
 import co.intentservice.chatui.ChatView;
 import co.intentservice.chatui.models.ChatMessage;
@@ -27,20 +27,20 @@ public class ChatActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
-        mChatView =(ChatView) findViewById(R.id.rooster_chat_view);
+        mChatView =(ChatView) findViewById(R.id.roster_chat_view);
 
         mChatView.setOnSentMessageListener(new ChatView.OnSentMessageListener(){
             @Override
             public boolean sendMessage(ChatMessage chatMessage){
                 // perform actual message sending
-                if (RoosterConnectionService.getState().equals(RoosterConnection.ConnectionState.CONNECTED)) {
+                if (RosterConnectionService.getState().equals(RosterConnection.ConnectionState.CONNECTED)) {
                     Log.d(TAG, "The client is connected to the server,Sending Message");
                     //Send the message to the server
 
-                    Intent intent = new Intent(RoosterConnectionService.SEND_MESSAGE);
-                    intent.putExtra(RoosterConnectionService.BUNDLE_MESSAGE_BODY,
+                    Intent intent = new Intent(RosterConnectionService.SEND_MESSAGE);
+                    intent.putExtra(RosterConnectionService.BUNDLE_MESSAGE_BODY,
                             mChatView.getTypedMessage());
-                    intent.putExtra(RoosterConnectionService.BUNDLE_TO, contactJid);
+                    intent.putExtra(RosterConnectionService.BUNDLE_TO, contactJid);
 
                     sendBroadcast(intent);
 
@@ -75,9 +75,9 @@ public class ChatActivity extends AppCompatActivity {
                 String action = intent.getAction();
                 switch (action)
                 {
-                    case RoosterConnectionService.NEW_MESSAGE:
-                        String from = intent.getStringExtra(RoosterConnectionService.BUNDLE_FROM_JID);
-                        String body = intent.getStringExtra(RoosterConnectionService.BUNDLE_MESSAGE_BODY);
+                    case RosterConnectionService.NEW_MESSAGE:
+                        String from = intent.getStringExtra(RosterConnectionService.BUNDLE_FROM_JID);
+                        String body = intent.getStringExtra(RosterConnectionService.BUNDLE_MESSAGE_BODY);
 
                         if ( from.equals(contactJid))
                         {
@@ -95,7 +95,7 @@ public class ChatActivity extends AppCompatActivity {
             }
         };
 
-        IntentFilter filter = new IntentFilter(RoosterConnectionService.NEW_MESSAGE);
+        IntentFilter filter = new IntentFilter(RosterConnectionService.NEW_MESSAGE);
         registerReceiver(mBroadcastReceiver,filter);
 
 

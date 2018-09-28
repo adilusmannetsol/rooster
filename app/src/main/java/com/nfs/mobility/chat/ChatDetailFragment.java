@@ -9,7 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
-import com.blikoon.rooster.R;
+import com.blikoon.roster.R;
 import java.util.ArrayList;
 import co.intentservice.chatui.ChatView;
 import co.intentservice.chatui.models.ChatMessage;
@@ -56,7 +56,7 @@ public class ChatDetailFragment extends Fragment {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.item_chat_view, container, false);
 
-        mChatView = rootView.findViewById(R.id.rooster_chat_view);
+        mChatView = rootView.findViewById(R.id.roster_chat_view);
 
         //mChatView.addMessages(new ArrayList<ChatMessage>(MsgManager.getInstance().getChatData().get(contactJid)));
 
@@ -64,14 +64,14 @@ public class ChatDetailFragment extends Fragment {
             @Override
             public boolean sendMessage(ChatMessage chatMessage) {
                 // perform actual message sending
-                if (RoosterConnectionService.getState().equals(RoosterConnection.ConnectionState.CONNECTED)) {
+                if (RosterConnectionService.getState().equals(RosterConnection.ConnectionState.CONNECTED)) {
                     Log.d(TAG, "The client is connected to the server,Sending Message");
                     //Send the message to the server
 
-                    Intent intent = new Intent(RoosterConnectionService.SEND_MESSAGE);
-                    intent.putExtra(RoosterConnectionService.BUNDLE_MESSAGE_BODY,
+                    Intent intent = new Intent(RosterConnectionService.SEND_MESSAGE);
+                    intent.putExtra(RosterConnectionService.BUNDLE_MESSAGE_BODY,
                             mChatView.getTypedMessage());
-                    intent.putExtra(RoosterConnectionService.BUNDLE_TO, contactJid);
+                    intent.putExtra(RosterConnectionService.BUNDLE_TO, contactJid);
 
                     getContext().sendBroadcast(intent);
 

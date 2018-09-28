@@ -38,9 +38,9 @@ import javax.net.ssl.SSLSession;
 /**
  * Updated by gakwaya on Oct/08/2017.
  */
-public class RoosterConnection implements ConnectionListener {
+public class RosterConnection implements ConnectionListener {
 
-    private static final String TAG = RoosterConnection.class.getSimpleName();
+    private static final String TAG = RosterConnection.class.getSimpleName();
 
     private final Context mApplicationContext;
     private final String mUsername;
@@ -60,8 +60,8 @@ public class RoosterConnection implements ConnectionListener {
     }
 
 
-    public RoosterConnection(Context context) {
-        Log.d(TAG, "RoosterConnection Constructor called.");
+    public RosterConnection(Context context) {
+        Log.d(TAG, "RosterConnection Constructor called.");
         mApplicationContext = context.getApplicationContext();
         String jid = PreferenceManager.getDefaultSharedPreferences(mApplicationContext)
                 .getString("xmpp_jid", null);
@@ -71,6 +71,21 @@ public class RoosterConnection implements ConnectionListener {
         if (jid != null) {
             mUsername = jid.split("@")[0];
             mServiceName = jid.split("@")[1];
+        } else {
+            mUsername = "";
+            mServiceName = "";
+        }
+    }
+
+    public RosterConnection(Context context, String jid, String password) {
+        Log.d(TAG, "RosterConnection Constructor called.");
+        mApplicationContext = context.getApplicationContext();
+        String mJID = jid;
+        mPassword = password;
+
+        if (mJID != null) {
+            mUsername = mJID.split("@")[0];
+            mServiceName = mJID.split("@")[1];
         } else {
             mUsername = "";
             mServiceName = "";
@@ -94,7 +109,7 @@ public class RoosterConnection implements ConnectionListener {
                 .setHost("http://10.14.10.20")
                 .setHostnameVerifier(verifier)
                 .setHostAddress(addr)
-                .setResource("Rooster")
+                .setResource("Roster")
 
                 //Was facing this issue
                 //https://discourse.igniterealtime.org/t/connection-with-ssl-fails-with-java-security-keystoreexception-jks-not-found/62566
@@ -142,16 +157,16 @@ public class RoosterConnection implements ConnectionListener {
                 }
 
                 //Bundle up the intent and send the broadcast.
-//                Intent intent = new Intent(RoosterConnectionService.NEW_MESSAGE);
+//                Intent intent = new Intent(RosterConnectionService.NEW_MESSAGE);
 //                intent.setPackage(mApplicationContext.getPackageName());
-//                intent.putExtra(RoosterConnectionService.BUNDLE_FROM_JID, contactJid);
-//                intent.putExtra(RoosterConnectionService.BUNDLE_MESSAGE_BODY, message.getBody());
+//                intent.putExtra(RosterConnectionService.BUNDLE_FROM_JID, contactJid);
+//                intent.putExtra(RosterConnectionService.BUNDLE_MESSAGE_BODY, message.getBody());
 //                mApplicationContext.sendBroadcast(intent);
 //                Log.e(TAG, "Received message from :" + contactJid + " broadcast sent.");
 
 
                 Log.e(TAG, "Received message from :" + contactJid + " data sent.");
-                RoosterManager.getInstance().notifyRecieveMessage(contactJid, message.getBody());
+                RosterManager.getInstance().notifyRecieveMessage(contactJid, message.getBody());
 
                 ///ADDED
 
@@ -171,16 +186,16 @@ public class RoosterConnection implements ConnectionListener {
             public void onReceive(Context context, Intent intent) {
                 //Check if the Intents purpose is to send the message.
                 String action = intent.getAction();
-                if (action.equals(RoosterConnectionService.SEND_MESSAGE)) {
+                if (action.equals(RosterConnectionService.SEND_MESSAGE)) {
                     //Send the message.
-                    sendMessage(intent.getStringExtra(RoosterConnectionService.BUNDLE_MESSAGE_BODY),
-                            intent.getStringExtra(RoosterConnectionService.BUNDLE_TO));
+                    sendMessage(intent.getStringExtra(RosterConnectionService.BUNDLE_MESSAGE_BODY),
+                            intent.getStringExtra(RosterConnectionService.BUNDLE_TO));
                 }
             }
         };
 
         IntentFilter filter = new IntentFilter();
-        filter.addAction(RoosterConnectionService.SEND_MESSAGE);
+        filter.addAction(RosterConnectionService.SEND_MESSAGE);
         mApplicationContext.registerReceiver(uiThreadMessageReceiver, filter);
     }
 
@@ -202,13 +217,13 @@ public class RoosterConnection implements ConnectionListener {
             Message message = new Message(jid, Message.Type.chat);
             message.setBody(body);
             chat.send(message);
-            RoosterManager.getInstance().notifySendMessage(toJid, body, true);
+            RosterManager.getInstance().notifySendMessage(toJid, body, true);
 
         } catch (SmackException.NotConnectedException e) {
-            RoosterManager.getInstance().notifySendMessage(toJid, body, false);
+            RosterManager.getInstance().notifySendMessage(toJid, body, false);
             e.printStackTrace();
         } catch (InterruptedException e) {
-            RoosterManager.getInstance().notifySendMessage(toJid, body, false);
+            RosterManager.getInstance().notifySendMessage(toJid, body, false);
             e.printStackTrace();
         }
     }
@@ -237,34 +252,36 @@ public class RoosterConnection implements ConnectionListener {
 
     @Override
     public void connected(XMPPConnection connection) {
-        RoosterConnectionService.sConnectionState = ConnectionState.CONNECTED;
+        RosterConnectionService.sConnectionState = ConnectionState.CONNECTED;
         Log.d(TAG, "Connected Successfully");
+        RosterManager.getInstance().notifyConntectionState(connection, ConnectionState.CONNECTED);
 
     }
 
     @Override
     public void authenticated(XMPPConnection connection, boolean resumed) {
-        RoosterConnectionService.sConnectionState = ConnectionState.CONNECTED;
+        RosterConnectionService.sConnectionState = ConnectionState.CONNECTED;
+        RosterManager.getInstance().notifyConntectionState(connection, ConnectionState.AUTHENTICATED);
         Log.d(TAG, "Authenticated Successfully");
         mRoster = Roster.getInstanceFor(connection); //
+        RosterManager.getInstance().setRoster(mRoster);
         mRoster.addRosterListener(new RosterListener() {
             @Override
             public void entriesAdded(Collection<Jid> addresses) {
                 Log.e(TAG, "Entries Added: " + addresses.toString());
-                RoosterManager.getInstance().notifyContactAdded(addresses);
-
+                RosterManager.getInstance().notifyContactAdded(addresses);
             }
 
             @Override
             public void entriesUpdated(Collection<Jid> addresses) {
                 Log.e(TAG, "Entries Updated: " + addresses.toString());
-                RoosterManager.getInstance().notifyContactUpdated(addresses);
+                RosterManager.getInstance().notifyContactUpdated(addresses);
             }
 
             @Override
             public void entriesDeleted(Collection<Jid> addresses) {
                 Log.e(TAG, "Entries Updated: " + addresses.toString());
-                RoosterManager.getInstance().notifyContactRemoved(addresses);
+                RosterManager.getInstance().notifyContactRemoved(addresses);
             }
 
             @Override
@@ -272,13 +289,13 @@ public class RoosterConnection implements ConnectionListener {
                 Log.e("entry", "Presence changed: " + presence.getFrom() + " " + presence);
 
                 //Bundle up the intent and send the broadcast.
-//                Intent intent = new Intent(RoosterConnectionService.PRESENCE_CHANGED);
+//                Intent intent = new Intent(RosterConnectionService.PRESENCE_CHANGED);
 //                intent.setPackage(mApplicationContext.getPackageName());
-//                intent.putExtra(RoosterConnectionService.BUNDLE_FROM_JID, presence.getFrom().asBareJid().toString());
-//                intent.putExtra(RoosterConnectionService.BUNDLE_PRESENCE_TYPE, presence.getType().toString());
+//                intent.putExtra(RosterConnectionService.BUNDLE_FROM_JID, presence.getFrom().asBareJid().toString());
+//                intent.putExtra(RosterConnectionService.BUNDLE_PRESENCE_TYPE, presence.getType().toString());
 //                mApplicationContext.sendBroadcast(intent);
                 Log.e(TAG, "Presence Changed :" + presence.getFrom() + " update: " + presence.getType());
-                RoosterManager.getInstance().notifyPresenceChanged(presence.getFrom().asBareJid().toString(), presence.getType().toString());
+                RosterManager.getInstance().notifyPresenceChanged(presence.getFrom().asBareJid().toString(), presence.getType().toString());
             }
         });
 
@@ -295,43 +312,48 @@ public class RoosterConnection implements ConnectionListener {
 
     @Override
     public void connectionClosed() {
-        RoosterConnectionService.sConnectionState = ConnectionState.DISCONNECTED;
+        RosterConnectionService.sConnectionState = ConnectionState.DISCONNECTED;
+        RosterManager.getInstance().notifyConntectionState(mConnection, ConnectionState.DISCONNECTED);
         Log.d(TAG, "Connectionclosed()");
 
     }
 
     @Override
     public void connectionClosedOnError(Exception e) {
-        RoosterConnectionService.sConnectionState = ConnectionState.DISCONNECTED;
+        RosterConnectionService.sConnectionState = ConnectionState.DISCONNECTED;
+        RosterManager.getInstance().notifyConntectionState(null, ConnectionState.DISCONNECTED);
         Log.d(TAG, "ConnectionClosedOnError, error " + e.toString());
 
     }
 
     @Override
     public void reconnectingIn(int seconds) {
-        RoosterConnectionService.sConnectionState = ConnectionState.CONNECTING;
+        RosterConnectionService.sConnectionState = ConnectionState.CONNECTING;
+        RosterManager.getInstance().notifyConntectionState(mConnection, ConnectionState.CONNECTING);
         Log.d(TAG, "ReconnectingIn() ");
 
     }
 
     @Override
     public void reconnectionSuccessful() {
-        RoosterConnectionService.sConnectionState = ConnectionState.CONNECTED;
+        RosterConnectionService.sConnectionState = ConnectionState.CONNECTED;
+        RosterManager.getInstance().notifyConntectionState(mConnection, ConnectionState.CONNECTED);
+
         Log.d(TAG, "ReconnectionSuccessful()");
 
     }
 
     @Override
     public void reconnectionFailed(Exception e) {
-        RoosterConnectionService.sConnectionState = ConnectionState.DISCONNECTED;
+        RosterConnectionService.sConnectionState = ConnectionState.DISCONNECTED;
+        RosterManager.getInstance().notifyConntectionState(mConnection, ConnectionState.DISCONNECTED);
         Log.d(TAG, "ReconnectionFailed()");
-
     }
 
     private void showContactListActivityWhenAuthenticated() {
-        Intent i = new Intent(RoosterConnectionService.UI_AUTHENTICATED);
-        i.setPackage(mApplicationContext.getPackageName());
-        mApplicationContext.sendBroadcast(i);
-        Log.d(TAG, "Sent the broadcast that we are authenticated");
+//        Intent i = new Intent(RosterConnectionService.UI_AUTHENTICATED);
+//        i.setPackage(mApplicationContext.getPackageName());
+//        mApplicationContext.sendBroadcast(i);
+//        Log.d(TAG, "Sent the broadcast that we are authenticated");
     }
 }

@@ -22,8 +22,8 @@ import java.util.List;
 /**
  * Created by gakwaya on 4/28/2016.
  */
-public class RoosterConnectionService extends Service {
-    private static final String TAG = RoosterConnectionService.class.getSimpleName();
+public class RosterConnectionService extends Service {
+    private static final String TAG = RosterConnectionService.class.getSimpleName();
 
     public static final String UI_AUTHENTICATED = "mobility.chat.UIAuthenticated";
     public static final String SEND_MESSAGE = "mobility.chat.SendMessage";
@@ -36,28 +36,28 @@ public class RoosterConnectionService extends Service {
     public static final String BUNDLE_FROM_JID = "b_from";
     public static final String BUNDLE_PRESENCE_TYPE = "b_type";
 
-    public static RoosterConnection.ConnectionState sConnectionState;
-    public static RoosterConnection.LoggedInState sLoggedInState;
+    public static RosterConnection.ConnectionState sConnectionState;
+    public static RosterConnection.LoggedInState sLoggedInState;
     private boolean mActive;//Stores whether or not the thread is active
     private Thread mThread;
     private Handler mTHandler;//We use this handler to post messages to
     //the background thread.
-    private RoosterConnection mConnection;
+    private RosterConnection mConnection;
 
-    public RoosterConnectionService() {
+    public RosterConnectionService() {
 
     }
 
-    public static RoosterConnection.ConnectionState getState() {
+    public static RosterConnection.ConnectionState getState() {
         if (sConnectionState == null) {
-            return RoosterConnection.ConnectionState.DISCONNECTED;
+            return RosterConnection.ConnectionState.DISCONNECTED;
         }
         return sConnectionState;
     }
 
-    public static RoosterConnection.LoggedInState getLoggedInState() {
+    public static RosterConnection.LoggedInState getLoggedInState() {
         if (sLoggedInState == null) {
-            return RoosterConnection.LoggedInState.LOGGED_OUT;
+            return RosterConnection.LoggedInState.LOGGED_OUT;
         }
         return sLoggedInState;
     }
@@ -77,7 +77,7 @@ public class RoosterConnectionService extends Service {
     private void initConnection() {
         Log.d(TAG, "initConnection()");
         if (mConnection == null) {
-            mConnection = new RoosterConnection(this);
+            mConnection = new RosterConnection(this);
         }
         try {
             mConnection.connect();
@@ -138,7 +138,7 @@ public class RoosterConnectionService extends Service {
         ContactRepository.getInstance().setContacts(mContacts);
 
         //Bundle up the intent and send the broadcast.
-        Intent intent = new Intent(RoosterConnectionService.CONTACTS_UPDATED);
+        Intent intent = new Intent(RosterConnectionService.CONTACTS_UPDATED);
         intent.setPackage(this.getApplicationContext().getPackageName());
         sendBroadcast(intent);
 

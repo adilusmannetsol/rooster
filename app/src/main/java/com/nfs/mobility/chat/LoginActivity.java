@@ -27,7 +27,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.blikoon.rooster.R;
+import com.blikoon.roster.R;
 
 import static android.Manifest.permission.READ_CONTACTS;
 
@@ -107,11 +107,12 @@ public class LoginActivity extends AppCompatActivity {
 
                 String action = intent.getAction();
                 switch (action) {
-                    case RoosterConnectionService.UI_AUTHENTICATED:
+                    case RosterConnectionService.UI_AUTHENTICATED:
                         Log.d(TAG, "Got a broadcast to show the main app window");
                         //Show the main app window
                         showProgress(false);
                         Intent i2 = new Intent(mContext, ChatListActivity.class);
+                        i2 = new Intent(mContext, ContactListActivity.class);
                         startActivity(i2);
                         finish();
                         break;
@@ -119,7 +120,7 @@ public class LoginActivity extends AppCompatActivity {
 
             }
         };
-        IntentFilter filter = new IntentFilter(RoosterConnectionService.UI_AUTHENTICATED);
+        IntentFilter filter = new IntentFilter(RosterConnectionService.UI_AUTHENTICATED);
         this.registerReceiver(mBroadcastReceiver, filter);
     }
 
@@ -234,7 +235,7 @@ public class LoginActivity extends AppCompatActivity {
                 .commit();
 
         //Start the service
-        Intent i1 = new Intent(this, RoosterConnectionService.class);
+        Intent i1 = new Intent(this, RosterConnectionService.class);
         startService(i1);
 
     }

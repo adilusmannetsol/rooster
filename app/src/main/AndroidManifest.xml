@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.blikoon.rooster">
+    package="com.blikoon.roster">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- To auto-complete the email text field in the login form with the user's emails -->
@@ -26,7 +26,7 @@
         <activity android:name="com.nfs.mobility.chat.ContactListActivity"></activity>
         <activity android:name="com.nfs.mobility.chat.ChatActivity"></activity>
 
-        <service android:name="com.nfs.mobility.chat.RoosterConnectionService"></service>
+        <service android:name="com.nfs.mobility.chat.RosterConnectionService"></service>
 
         <activity
             android:name="com.nfs.mobility.chat.ChatListActivity"
