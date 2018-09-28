@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.UiThread;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -42,15 +43,10 @@ public class ChatContactsActivity extends AppCompatActivity {
 
     private boolean mTwoPane;
 
-    private String contactJid;
-
     private RecyclerView contactsRecyclerView;
 
     private ContactAdapter mAdapter;
 
-    private BroadcastReceiver mBroadcastReceiverNewMessage;
-    private BroadcastReceiver mBroadcastReceiverPresenceChanged;
-    private BroadcastReceiver mBroadcastReceiverContactsUpdated;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,32 +63,23 @@ public class ChatContactsActivity extends AppCompatActivity {
             // If this view is present, then the
             // activity should be in two-pane mode.
             mTwoPane = true;//TODO
-        }else {
+        } else {
             mTwoPane = true;//TODO
         }
 
         ContactRepository model = ContactRepository.getInstance();
         List<Contact> contacts = model.getContacts();
 
-        mAdapter = new ContactAdapter(contacts,listActionListener);
+        mAdapter = new ContactAdapter(contacts, listActionListener);
         contactsRecyclerView.setAdapter(mAdapter);
 
+        RosterManager.getInstance().addOnRosterChangeListener(rosterUpdatesListener);
 
-        RosterManager.getInstance().addOnRosterChangeListener(roosterUpdatesListener);
-
-        }
+    }
 
     ContactListActionListener listActionListener = new ContactListActionListener() {
         @Override
         public void startChatWithJidof(final String Jid) {
-
-//            if (mChatView.getVisibility() != View.VISIBLE) {
-//                mChatView.setVisibility(View.VISIBLE);
-//                notSelectedTxt.setVisibility(View.GONE);
-//            } else {
-//                mChatView.clearMessages();
-//            }
-
 
             if (mTwoPane) {
                 Bundle arguments = new Bundle();
@@ -109,9 +96,6 @@ public class ChatContactsActivity extends AppCompatActivity {
 ////TODO
 //                context.startActivity(intent);//TODO
             }
-
-
-            contactJid = Jid;
 
         }
     };
@@ -146,126 +130,62 @@ public class ChatContactsActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        unregisterReceiver(mBroadcastReceiverNewMessage);
-        unregisterReceiver(mBroadcastReceiverPresenceChanged);
-        unregisterReceiver(mBroadcastReceiverContactsUpdated);
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        mBroadcastReceiverNewMessage = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                String action = intent.getAction();
-                switch (action) {
-                    case RosterConnectionService.NEW_MESSAGE:
-                        String from = intent.getStringExtra(RosterConnectionService.BUNDLE_FROM_JID);
-                        String body = intent.getStringExtra(RosterConnectionService.BUNDLE_MESSAGE_BODY);
-
-                        Log.e(TAG, "NEW_MESSAGE: From: " + from + " Body: " + body);
-
-                        if (from.equals(contactJid)) {
-                            ChatMessage chatMessage = new ChatMessage(body, System.currentTimeMillis(), ChatMessage.Type.RECEIVED);
-                           // mChatView.addMessage(chatMessage);
-
-                        } else {
-                            Log.d(TAG, "Got a message from jid :" + from);
-                        }
-
-                        return;
-                }
-
-            }
-        };
-
-        IntentFilter filterNewMessage = new IntentFilter(RosterConnectionService.NEW_MESSAGE);
-        registerReceiver(mBroadcastReceiverNewMessage, filterNewMessage);
-
-        mBroadcastReceiverPresenceChanged = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                String action = intent.getAction();
-                switch (action) {
-                    case RosterConnectionService.PRESENCE_CHANGED:
-                        String from = intent.getStringExtra(RosterConnectionService.BUNDLE_FROM_JID);
-                        String type = intent.getStringExtra(RosterConnectionService.BUNDLE_PRESENCE_TYPE);
-
-                        Log.e(TAG, "Presence from: " + from + " updated to " + type);
-
-                        for (Contact contact : ContactRepository.getInstance().getContacts()) {
-                            if (contact.getJid().equals(from)) {
-                                contact.setStatus(type);
-                            }
-                        }
-
-                        mAdapter.update(ContactRepository.getInstance().getContacts());
-
-                        return;
-                }
-
-            }
-        };
-
-        IntentFilter filterPresenceChanged = new IntentFilter(RosterConnectionService.PRESENCE_CHANGED);
-        registerReceiver(mBroadcastReceiverPresenceChanged, filterPresenceChanged);
-
-        mBroadcastReceiverContactsUpdated = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                String action = intent.getAction();
-                switch (action) {
-                    case RosterConnectionService.CONTACTS_UPDATED:
-                        mAdapter.update(ContactRepository.getInstance().getContacts());
-                        return;
-                }
-            }
-        };
-
-        IntentFilter filterContactsUpdated = new IntentFilter(RosterConnectionService.CONTACTS_UPDATED);
-        registerReceiver(mBroadcastReceiverContactsUpdated, filterContactsUpdated);
-        }
-
+    }
 
     //region RosterManager
+
     @Override
     protected void onDestroy() {
         cleanUpRosterListeners();
+        RosterManager.getInstance().disconnectUser();
         super.onDestroy();
     }
 
-
     void cleanUpRosterListeners() {
-        RosterManager.getInstance().removeOnRosterChangeListener(roosterUpdatesListener);
+        RosterManager.getInstance().removeOnRosterChangeListener(rosterUpdatesListener);
     }
 
-    RosterManager.OnRosterUpdatesListener roosterUpdatesListener = new RosterManager.OnRosterUpdatesListener() {
+    @UiThread
+    private void updateContactListView() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mAdapter.update(ContactRepository.getInstance().getContacts());
+            }
+        });
+    }
+
+    RosterManager.OnRosterUpdatesListener rosterUpdatesListener = new RosterManager.OnRosterUpdatesListener() {
         @Override
         public void onChangePresence(String jid, String status) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    mAdapter.update(ContactRepository.getInstance().getContacts());
-                }
-            });
+            Log.e(TAG, "Presence Changed: " + jid + " , status: " + status);
+            updateContactListView();
         }
 
         @Override
         public void onRemoveContact(Collection<Jid> addresses) {
-
+            Log.e(TAG, "Contact Removed: " + addresses.toString());
+            updateContactListView();
         }
 
         @Override
         public void onUpdateContact(Collection<Jid> addresses) {
-
+            Log.e(TAG, "Contact Updated: " + addresses.toString());
+            updateContactListView();
         }
 
         @Override
         public void onAddContact(Collection<Jid> addresses) {
-
+            Log.e(TAG, "Contact Added: " + addresses.toString());
+            updateContactListView();
         }
     };
-
 
     //endregion
 }
