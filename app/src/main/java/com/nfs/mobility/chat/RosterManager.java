@@ -136,6 +136,7 @@ class RosterManager {
         if (mConnection != null) {
             mConnection.disconnect();
         }
+        cleanUpManager();
     }
 
     public void loadContacts (){
@@ -299,6 +300,13 @@ class RosterManager {
     }
 
     public void cleanUpManager() {
+        try {
+            if (mConnection != null)
+                mConnection.disconnect();
+            mConnection = null;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         MessageRepository.getInstance().cleanUpMessages();
         ContactRepository.getInstance().cleanUpContacts();
         if (mMessageChangeListeners != null) mMessageChangeListeners.clear();
