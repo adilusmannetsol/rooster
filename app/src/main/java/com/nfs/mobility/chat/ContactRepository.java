@@ -46,6 +46,7 @@ public class ContactRepository {
         this.mContacts.addAll(mContacts);
     }
 
+    synchronized
     public List<Contact> getContacts()
     {
         Collections.sort(mContacts, new Comparator<Contact>() {
