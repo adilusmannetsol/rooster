@@ -6,6 +6,8 @@ import org.jxmpp.jid.Jid;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class ContactRepository {
@@ -46,6 +48,12 @@ public class ContactRepository {
 
     public List<Contact> getContacts()
     {
+        Collections.sort(mContacts, new Comparator<Contact>() {
+            @Override
+            public int compare(Contact contact, Contact t1) {
+                return contact.getUserName().compareToIgnoreCase(t1.getUserName());
+            }
+        });
         return mContacts;
     }
 

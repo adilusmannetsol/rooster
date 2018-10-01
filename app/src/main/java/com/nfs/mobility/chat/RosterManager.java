@@ -57,6 +57,8 @@ class RosterManager {
     private RosterConnection mConnection;
     private Roster mRoster;
 
+    private String mHost;
+
     private void initiateThread(){
         if (mThread == null || !mThread.isAlive()) {
             mThread = new Thread(new Runnable() {
@@ -73,15 +75,14 @@ class RosterManager {
         }
     }
 
-    public void init(final Context context){
-        /**
-         * Initiate Connection
-         * Notify Connected
-         * Notify Authenticate
-         * Notify Failure
-         */
+    public void init(final Context context, String host){
         mApplicationContext = context.getApplicationContext();
+        mHost = host;
         initiateThread();
+    }
+
+    public String getHost(){
+        return mHost;
     }
 
     public void connectUser(final String jid, final String password) {

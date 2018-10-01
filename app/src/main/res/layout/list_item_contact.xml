@@ -18,7 +18,7 @@
             android:layout_height="32dp"
             android:scaleType="centerInside"
             android:layout_gravity="center_vertical"
-            android:layout_marginLeft="8dp"
+            android:layout_marginLeft="16dp"
             android:src="@drawable/bg_profile_image"
             android:tint="@color/blue"/>
 
@@ -47,7 +47,8 @@
         android:layout_width="match_parent"
         android:layout_height="1px"
         android:layout_gravity="bottom"
-        android:layout_marginHorizontal="8dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="8dp"
         android:background="@color/blue"/>
 
 

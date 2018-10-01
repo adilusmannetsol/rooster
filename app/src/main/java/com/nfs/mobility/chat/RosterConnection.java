@@ -51,8 +51,8 @@ public class RosterConnection implements ConnectionListener {
     private Roster mRoster;
 
 
-    public static enum ConnectionState {
-        CONNECTED, AUTHENTICATED, CONNECTING, DISCONNECTING, DISCONNECTED;
+    public enum ConnectionState {
+        CONNECTED, AUTHENTICATED, CONNECTING, DISCONNECTING, DISCONNECTED, FAILURE;
     }
 
     public static enum LoggedInState {
@@ -94,9 +94,15 @@ public class RosterConnection implements ConnectionListener {
 
 
     public void connect() throws IOException, XMPPException, SmackException {
-        Log.d(TAG, "Connecting to server " + mServiceName);
 
-        InetAddress addr = InetAddress.getByName("10.14.10.20");
+        if (RosterManager.getInstance().getHost() == null) throw new IllegalStateException("Initiation Exception: Initiate RosterManager First, RosterManager.init() with ApplicationContext()");
+
+        Log.d(TAG, "Connecting to server " + mServiceName);
+        String host = RosterManager.getInstance().getHost();
+        String hostAddr = host.split("//")[1];
+
+//        InetAddress addr = InetAddress.getByName("10.14.10.20");
+        InetAddress addr = InetAddress.getByName(hostAddr);
         HostnameVerifier verifier = new HostnameVerifier() {
             @Override
             public boolean verify(String hostname, SSLSession session) {
@@ -106,7 +112,8 @@ public class RosterConnection implements ConnectionListener {
 
         XMPPTCPConnectionConfiguration conf = XMPPTCPConnectionConfiguration.builder()
                 .setXmppDomain(mServiceName)
-                .setHost("http://10.14.10.20")
+//                .setHost("http://10.14.10.20")
+                .setHost(host)
                 .setHostnameVerifier(verifier)
                 .setHostAddress(addr)
                 .setResource("Roster")
@@ -159,6 +166,7 @@ public class RosterConnection implements ConnectionListener {
             mConnection.login(mUsername, mPassword);
             Log.d(TAG, " login() Called ");
         } catch (InterruptedException e) {
+            RosterManager.getInstance().notifyConntectionState(null, ConnectionState.FAILURE);
             e.printStackTrace();
         }
 

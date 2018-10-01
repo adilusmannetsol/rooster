@@ -90,7 +90,7 @@ public class LoginActivity extends AppCompatActivity {
         mProgressView = findViewById(R.id.login_progress);
         mContext = this;
 
-        RosterManager.getInstance().init(this);
+        RosterManager.getInstance().init(this, "http://10.14.10.20");
         RosterManager.getInstance().addOnConnectionStateListener(connectionStateListener);
 
     }
