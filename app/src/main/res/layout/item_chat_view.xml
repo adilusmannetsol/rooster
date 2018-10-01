@@ -16,8 +16,9 @@
         app:bubbleBackgroundSend="@color/white"
         app:messageTextColorSend="@color/black"
         app:tStampTextColorSend="@color/bg_dark_grey_shade"
-        app:bubbleBackgroundRcv="@color/white"
+        app:bubbleBackgroundRcv="@color/blue"
         app:messageTextColorRcv="@color/white"
-        app:tStampTextColorRcv="@color/bg_dark_grey_shade"/>
+        app:tStampTextColorRcv="@color/bg_dark_grey_shade"
+        app:messageTextSize="14sp"/>
 
 </RelativeLayout>
