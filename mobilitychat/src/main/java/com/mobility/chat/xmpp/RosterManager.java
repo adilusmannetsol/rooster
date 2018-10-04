@@ -86,7 +86,7 @@ public class RosterManager {
 
     public void init(final Context context, String host){
         mHost = host;
-        int port = 5522;
+        int port = 5222;
         init(context, host, port);
     }
 

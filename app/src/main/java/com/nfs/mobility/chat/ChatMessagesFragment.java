@@ -89,7 +89,7 @@ public class ChatMessagesFragment extends Fragment {
             @Override
             public boolean sendMessage(ChatMessage chatMessage) {
                 // perform actual message sending
-                if (RosterManager.getInstance().getConnectionState().equals(RosterConnection.ConnectionState.CONNECTED)) {
+                if (RosterManager.getInstance().getConnectionState().equals(RosterConnection.ConnectionState.AUTHENTICATED)) {
                     Log.d(TAG, "The client is connected to the server,Sending Message");
                     //Send the message to the server
 

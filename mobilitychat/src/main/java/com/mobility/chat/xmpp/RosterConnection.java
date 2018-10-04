@@ -36,7 +36,7 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 
 /**
- * Updated by gakwaya on Oct/08/2017.
+ * Updated by adilusman on Oct/2017.
  */
 public class RosterConnection implements ConnectionListener {
 

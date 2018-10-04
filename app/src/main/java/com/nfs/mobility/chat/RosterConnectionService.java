@@ -25,7 +25,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Created by gakwaya on 4/28/2016.
+ * Created by adilusman on Oct/2018.
  */
 public class RosterConnectionService extends Service {
     public static final String UI_AUTHENTICATED = "mobility.chat.UIAuthenticated";

@@ -1,7 +1,7 @@
 package com.mobility.chat.xmpp.model;
 
 /**
- * Created by gakwaya on 4/16/2016.
+ * Created by adilusman on Oct/2016.
  */
 public class Contact {
     private String jid;
