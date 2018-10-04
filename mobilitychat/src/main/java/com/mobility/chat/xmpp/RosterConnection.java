@@ -1,4 +1,4 @@
-package com.nfs.mobility.chat;
+package com.mobility.chat.xmpp;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -50,31 +50,29 @@ public class RosterConnection implements ConnectionListener {
     private BroadcastReceiver uiThreadMessageReceiver;//Receives messages from the ui thread.
     private Roster mRoster;
 
+    public static final String SEND_MESSAGE = "mobility.chat.SendMessage";
+    public static final String BUNDLE_MESSAGE_BODY = "message_body";
+    public static final String BUNDLE_TO = "message_to";
+
+    public static final String NEW_MESSAGE = "mobility.chat.NewMessage";
+    public static final String BUNDLE_FROM_JID = "message_from";
+    public static final String BUNDLE_PRESENCE_TYPE = "message_type";
+
+
 
     public enum ConnectionState {
-        CONNECTED, AUTHENTICATED, CONNECTING, DISCONNECTING, DISCONNECTED, FAILURE;
+        CONNECTED,
+        AUTHENTICATED,
+        CONNECTING,
+        DISCONNECTING,
+        DISCONNECTED,
+        FAILURE,
+        INITIATING,
+        INITIATED
     }
 
     public static enum LoggedInState {
         LOGGED_IN, LOGGED_OUT;
-    }
-
-
-    public RosterConnection(Context context) {
-        Log.d(TAG, "RosterConnection Constructor called.");
-        mApplicationContext = context.getApplicationContext();
-        String jid = PreferenceManager.getDefaultSharedPreferences(mApplicationContext)
-                .getString("xmpp_jid", null);
-        mPassword = PreferenceManager.getDefaultSharedPreferences(mApplicationContext)
-                .getString("xmpp_password", null);
-
-        if (jid != null) {
-            mUsername = jid.split("@")[0];
-            mServiceName = jid.split("@")[1];
-        } else {
-            mUsername = "";
-            mServiceName = "";
-        }
     }
 
     public RosterConnection(Context context, String jid, String password) {
@@ -95,10 +93,13 @@ public class RosterConnection implements ConnectionListener {
 
     public void connect() throws IOException, XMPPException, SmackException {
 
-        if (RosterManager.getInstance().getHost() == null) throw new IllegalStateException("Initiation Exception: Initiate RosterManager First, RosterManager.init() with ApplicationContext()");
+        if (RosterManager.getInstance().getHost() == null)
+            throw new IllegalStateException("Initiation Exception: Initiate RosterManager First, " +
+                    "RosterManager.init() with ApplicationContext()");
 
         Log.d(TAG, "Connecting to server " + mServiceName);
         String host = RosterManager.getInstance().getHost();
+        int port = RosterManager.getInstance().getPort();
         String hostAddr = host.split("//")[1];
 
 //        InetAddress addr = InetAddress.getByName("10.14.10.20");
@@ -117,7 +118,7 @@ public class RosterConnection implements ConnectionListener {
                 .setHostnameVerifier(verifier)
                 .setHostAddress(addr)
                 .setResource("Roster")
-
+                .setPort(port)
                 //Was facing this issue
                 //https://discourse.igniterealtime.org/t/connection-with-ssl-fails-with-java-security-keystoreexception-jks-not-found/62566
                 .setKeystoreType(null) //This line seems to getInstance rid of the problem
@@ -155,7 +156,7 @@ public class RosterConnection implements ConnectionListener {
                 }
 
                 Log.e(TAG, "Received message from :" + contactJid + " data sent.");
-                RosterManager.getInstance().notifyRecieveMessage(contactJid, message.getBody());
+                RosterManager.getInstance().notifyReceiveMessage(contactJid, message.getBody());
 
             }
         });
@@ -178,21 +179,22 @@ public class RosterConnection implements ConnectionListener {
     }
 
     private void setupUiThreadBroadCastMessageReceiver() {
+        if (uiThreadMessageReceiver != null) return;
         uiThreadMessageReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 //Check if the Intents purpose is to send the message.
                 String action = intent.getAction();
-                if (action.equals(RosterConnectionService.SEND_MESSAGE)) {
+                if (action.equals(SEND_MESSAGE)) {
                     //Send the message.
-                    sendMessage(intent.getStringExtra(RosterConnectionService.BUNDLE_MESSAGE_BODY),
-                            intent.getStringExtra(RosterConnectionService.BUNDLE_TO));
+                    sendMessage(intent.getStringExtra(BUNDLE_MESSAGE_BODY),
+                            intent.getStringExtra(BUNDLE_TO));
                 }
             }
         };
 
         IntentFilter filter = new IntentFilter();
-        filter.addAction(RosterConnectionService.SEND_MESSAGE);
+        filter.addAction(SEND_MESSAGE);
         mApplicationContext.registerReceiver(uiThreadMessageReceiver, filter);
     }
 
@@ -227,12 +229,7 @@ public class RosterConnection implements ConnectionListener {
 
 
     public void disconnect() {
-        Log.d(TAG, "Disconnecting from serser " + mServiceName);
-
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mApplicationContext);
-        prefs.edit().putBoolean("xmpp_logged_in", false).commit();
-
-
+        Log.d(TAG, "Disconnecting from server " + mServiceName);
         if (mConnection != null) {
             mConnection.disconnect();
         }
@@ -249,7 +246,6 @@ public class RosterConnection implements ConnectionListener {
 
     @Override
     public void connected(XMPPConnection connection) {
-        RosterConnectionService.sConnectionState = ConnectionState.CONNECTED;
         Log.d(TAG, "Connected Successfully");
         RosterManager.getInstance().notifyConntectionState(connection, ConnectionState.CONNECTED);
 
@@ -257,7 +253,6 @@ public class RosterConnection implements ConnectionListener {
 
     @Override
     public void authenticated(XMPPConnection connection, boolean resumed) {
-        RosterConnectionService.sConnectionState = ConnectionState.CONNECTED;
         Log.d(TAG, "Authenticated Successfully");
         mRoster = Roster.getInstanceFor(connection); //
         RosterManager.getInstance().setRoster(mRoster);
@@ -289,8 +284,6 @@ public class RosterConnection implements ConnectionListener {
         });
 
         RosterManager.getInstance().notifyConntectionState(connection, ConnectionState.AUTHENTICATED);
-
-//        showContactListActivityWhenAuthenticated();
     }
 
     public Roster getRoster() {
@@ -303,7 +296,6 @@ public class RosterConnection implements ConnectionListener {
 
     @Override
     public void connectionClosed() {
-        RosterConnectionService.sConnectionState = ConnectionState.DISCONNECTED;
         RosterManager.getInstance().notifyConntectionState(mConnection, ConnectionState.DISCONNECTED);
         Log.d(TAG, "Connectionclosed()");
 
@@ -311,7 +303,6 @@ public class RosterConnection implements ConnectionListener {
 
     @Override
     public void connectionClosedOnError(Exception e) {
-        RosterConnectionService.sConnectionState = ConnectionState.DISCONNECTED;
         RosterManager.getInstance().notifyConntectionState(null, ConnectionState.DISCONNECTED);
         Log.d(TAG, "ConnectionClosedOnError, error " + e.toString());
 
@@ -319,7 +310,6 @@ public class RosterConnection implements ConnectionListener {
 
     @Override
     public void reconnectingIn(int seconds) {
-        RosterConnectionService.sConnectionState = ConnectionState.CONNECTING;
         RosterManager.getInstance().notifyConntectionState(mConnection, ConnectionState.CONNECTING);
         Log.d(TAG, "ReconnectingIn() ");
 
@@ -327,7 +317,6 @@ public class RosterConnection implements ConnectionListener {
 
     @Override
     public void reconnectionSuccessful() {
-        RosterConnectionService.sConnectionState = ConnectionState.CONNECTED;
         RosterManager.getInstance().notifyConntectionState(mConnection, ConnectionState.CONNECTED);
 
         Log.d(TAG, "ReconnectionSuccessful()");
@@ -336,15 +325,8 @@ public class RosterConnection implements ConnectionListener {
 
     @Override
     public void reconnectionFailed(Exception e) {
-        RosterConnectionService.sConnectionState = ConnectionState.DISCONNECTED;
         RosterManager.getInstance().notifyConntectionState(mConnection, ConnectionState.DISCONNECTED);
         Log.d(TAG, "ReconnectionFailed()");
     }
 
-    private void showContactListActivityWhenAuthenticated() {
-//        Intent i = new Intent(RosterConnectionService.UI_AUTHENTICATED);
-//        i.setPackage(mApplicationContext.getPackageName());
-//        mApplicationContext.sendBroadcast(i);
-//        Log.d(TAG, "Sent the broadcast that we are authenticated");
-    }
 }

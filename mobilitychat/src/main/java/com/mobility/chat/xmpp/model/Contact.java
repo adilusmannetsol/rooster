@@ -1,4 +1,4 @@
-package com.nfs.mobility.chat;
+package com.mobility.chat.xmpp.model;
 
 /**
  * Created by gakwaya on 4/16/2016.

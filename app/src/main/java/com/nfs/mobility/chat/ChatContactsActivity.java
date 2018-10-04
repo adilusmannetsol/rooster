@@ -1,11 +1,7 @@
 package com.nfs.mobility.chat;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.UiThread;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -17,13 +13,14 @@ import android.view.MenuItem;
 
 import com.allyants.notifyme.NotifyMe;
 import com.blikoon.roster.R;
+import com.mobility.chat.xmpp.ContactRepository;
+import com.mobility.chat.xmpp.RosterManager;
+import com.mobility.chat.xmpp.model.Contact;
 
 import org.jxmpp.jid.Jid;
 
 import java.util.Collection;
 import java.util.List;
-
-import co.intentservice.chatui.models.ChatMessage;
 
 /**
  * An activity representing a list of Items. This activity
@@ -41,16 +38,73 @@ public class ChatContactsActivity extends AppCompatActivity {
      */
 
     private static final String TAG = ChatContactsActivity.class.getSimpleName();
-
-    private boolean mTwoPane;
-
-    private RecyclerView contactsRecyclerView;
-
-    private ContactAdapter mAdapter;
-
     NotifyMe.Builder notifyMe;
+    RosterManager.OnMessageChangeListener messageChangeListener = new RosterManager.OnMessageChangeListener() {
+        @Override
+        public void onMessageReceived(String fromJID, String newMessage, int totalCount) {
+            showNotifications(fromJID, newMessage);
+        }
 
+        @Override
+        public void onMessageSent(String toJID, String newMessage, int totalCount, boolean success) {
 
+        }
+
+        @Override
+        public void onMessageDeleted(String jid, String message, int totalCount) {
+
+        }
+    };
+    private boolean mTwoPane;
+    ContactListActionListener listActionListener = new ContactListActionListener() {
+        @Override
+        public void startChatWithJidof(final String Jid) {
+
+            if (mTwoPane) {
+                Bundle arguments = new Bundle();
+                arguments.putString(ChatMessagesFragment.ARG_ITEM_JID, Jid);
+                ChatMessagesFragment fragment = new ChatMessagesFragment();
+                fragment.setArguments(arguments);
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.item_detail_container, fragment)
+                        .commit();
+            } else {
+//                Context context = getApplicationContext();//TODO
+//                Intent intent = new Intent(context, ChatDetailActivity.class);//TODO
+//                intent.putExtra(ChatMessagesFragment.ARG_ITEM_JID, Jid);//TODO
+////TODO
+//                context.startActivity(intent);//TODO
+            }
+
+        }
+    };
+    private RecyclerView contactsRecyclerView;
+    private ContactAdapter mAdapter;
+    RosterManager.OnRosterUpdatesListener rosterUpdatesListener = new RosterManager.OnRosterUpdatesListener() {
+        @Override
+        public void onChangePresence(String jid, String status) {
+            Log.e(TAG, "Presence Changed: " + jid + " , status: " + status);
+            updateContactListView();
+        }
+
+        @Override
+        public void onRemoveContact(Collection<Jid> addresses) {
+            Log.e(TAG, "Contact Removed: " + addresses.toString());
+            updateContactListView();
+        }
+
+        @Override
+        public void onUpdateContact(Collection<Jid> addresses) {
+            Log.e(TAG, "Contact Updated: " + addresses.toString());
+            updateContactListView();
+        }
+
+        @Override
+        public void onAddContact(Collection<Jid> addresses) {
+            Log.e(TAG, "Contact Added: " + addresses.toString());
+            updateContactListView();
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,34 +132,12 @@ public class ChatContactsActivity extends AppCompatActivity {
         mAdapter = new ContactAdapter(contacts, listActionListener);
         contactsRecyclerView.setAdapter(mAdapter);
 
-        RosterManager.getInstance().enableNotifications(true);
+        notifyMe = new NotifyMe.Builder(getApplicationContext());
+
         RosterManager.getInstance().addOnRosterChangeListener(rosterUpdatesListener);
         RosterManager.getInstance().addOnMessageChangeListener(messageChangeListener);
 
     }
-
-    ContactListActionListener listActionListener = new ContactListActionListener() {
-        @Override
-        public void startChatWithJidof(final String Jid) {
-
-            if (mTwoPane) {
-                Bundle arguments = new Bundle();
-                arguments.putString(ChatMessagesFragment.ARG_ITEM_JID, Jid);
-                ChatMessagesFragment fragment = new ChatMessagesFragment();
-                fragment.setArguments(arguments);
-                getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.item_detail_container, fragment)
-                        .commit();
-            } else {
-//                Context context = getApplicationContext();//TODO
-//                Intent intent = new Intent(context, ChatDetailActivity.class);//TODO
-//                intent.putExtra(ChatMessagesFragment.ARG_ITEM_JID, Jid);//TODO
-////TODO
-//                context.startActivity(intent);//TODO
-            }
-
-        }
-    };
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -118,9 +150,7 @@ public class ChatContactsActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.roster_logout) {
             //Disconnect from server
-            Log.d(TAG, "Initiating the log out process");
-            Intent i1 = new Intent(this, RosterConnectionService.class);
-            stopService(i1);
+            RosterManager.getInstance().disconnectUser();
 
             //Finish this activity
             finish();
@@ -134,6 +164,8 @@ public class ChatContactsActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    //region RosterManager
+
     @Override
     protected void onPause() {
         super.onPause();
@@ -144,8 +176,6 @@ public class ChatContactsActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
     }
-
-    //region RosterManager
 
     @Override
     protected void onDestroy() {
@@ -168,49 +198,6 @@ public class ChatContactsActivity extends AppCompatActivity {
             }
         });
     }
-
-    RosterManager.OnRosterUpdatesListener rosterUpdatesListener = new RosterManager.OnRosterUpdatesListener() {
-        @Override
-        public void onChangePresence(String jid, String status) {
-            Log.e(TAG, "Presence Changed: " + jid + " , status: " + status);
-            updateContactListView();
-        }
-
-        @Override
-        public void onRemoveContact(Collection<Jid> addresses) {
-            Log.e(TAG, "Contact Removed: " + addresses.toString());
-            updateContactListView();
-        }
-
-        @Override
-        public void onUpdateContact(Collection<Jid> addresses) {
-            Log.e(TAG, "Contact Updated: " + addresses.toString());
-            updateContactListView();
-        }
-
-        @Override
-        public void onAddContact(Collection<Jid> addresses) {
-            Log.e(TAG, "Contact Added: " + addresses.toString());
-            updateContactListView();
-        }
-    };
-
-    RosterManager.OnMessageChangeListener messageChangeListener = new RosterManager.OnMessageChangeListener() {
-        @Override
-        public void onMessageReceived(String fromJID, String newMessage, int totalCount) {
-//            showNotifications(fromJID, newMessage);
-        }
-
-        @Override
-        public void onMessageSent(String toJID, String newMessage, int totalCount, boolean success) {
-
-        }
-
-        @Override
-        public void onMessageDeleted(String jid, String message, int totalCount) {
-
-        }
-    };
 
     void showNotifications(String fromJID, String newMessage) {
 

@@ -10,13 +10,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.Build;
+import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.UiThread;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Build;
-import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -29,6 +29,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.blikoon.roster.R;
+import com.mobility.chat.xmpp.RosterConnection;
+import com.mobility.chat.xmpp.RosterManager;
 
 import static android.Manifest.permission.READ_CONTACTS;
 
@@ -52,6 +54,17 @@ public class LoginActivity extends AppCompatActivity {
     private View mLoginFormView;
     private BroadcastReceiver mBroadcastReceiver;
     private Context mContext;
+    RosterManager.OnConnectionStateListener connectionStateListener = new RosterManager.OnConnectionStateListener() {
+        @Override
+        public void onConnectionStateChange(RosterConnection.ConnectionState connectionState) {
+            if (connectionState.equals(RosterConnection.ConnectionState.AUTHENTICATED)) {
+                Log.d(TAG, "Got a broadcast to show the main app window");
+                //Show the main app window
+                loadContactListActivity();
+                showProgress(false);
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -169,7 +182,6 @@ public class LoginActivity extends AppCompatActivity {
             }
         }
     }
-
 
     /**
      * Attempts to sign in or register the account specified by the login form.
@@ -293,7 +305,6 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-
     //Check if service is running.
     private boolean isServiceRunning(Class<?> serviceClass) {
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
@@ -304,18 +315,6 @@ public class LoginActivity extends AppCompatActivity {
         }
         return false;
     }
-
-    RosterManager.OnConnectionStateListener connectionStateListener = new RosterManager.OnConnectionStateListener() {
-        @Override
-        public void onConnectionStateChange(RosterConnection.ConnectionState connectionState) {
-            if(connectionState.equals(RosterConnection.ConnectionState.AUTHENTICATED)){
-            Log.d(TAG, "Got a broadcast to show the main app window");
-            //Show the main app window
-            loadContactListActivity();
-            showProgress(false);
-            }
-        }
-    };
 
     @UiThread
     void loadContactListActivity() {

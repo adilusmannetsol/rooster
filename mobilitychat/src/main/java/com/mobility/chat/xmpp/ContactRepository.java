@@ -1,6 +1,8 @@
-package com.nfs.mobility.chat;
+package com.mobility.chat.xmpp;
 
 import android.content.Context;
+
+import com.mobility.chat.xmpp.model.Contact;
 
 import org.jxmpp.jid.Jid;
 

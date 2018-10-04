@@ -1,13 +1,12 @@
-package com.nfs.mobility.chat;
+package com.mobility.chat.xmpp;
 
 import android.content.Context;
-import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
-import com.allyants.notifyme.NotifyMe;
-import com.blikoon.roster.R;
+import com.mobility.chat.xmpp.model.ChatMessage;
+import com.mobility.chat.xmpp.model.Contact;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
@@ -24,15 +23,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import co.intentservice.chatui.models.ChatMessage;
-
-class RosterManager {
+public class RosterManager {
     private static final RosterManager ourInstance = new RosterManager();
     private static final String TAG = RosterManager.class.getSimpleName();
     private RosterConnection.ConnectionState mConnectionState;
     private boolean mShowNotifications;
+    private int mPort = 5222;
 
-    static RosterManager getInstance() {
+    public static RosterManager getInstance() {
         if (ourInstance == null)
             return new RosterManager();
         else
@@ -47,7 +45,7 @@ class RosterManager {
     private Set<OnRosterUpdatesListener> mRosterUpdatesListeners = new CopyOnWriteArraySet<>();
     private Set<OnConnectionStateListener> mConnectionStateListeners = new CopyOnWriteArraySet<>();
 
-    Context mApplicationContext;
+    private Context mApplicationContext;
 
     Long authenticateTime;
 
@@ -73,16 +71,31 @@ class RosterManager {
             });
             mThread.start();
         }
+        while (!mThread.isAlive()){/* Wait for Thread to be Alive */}
+        while (mTHandler == null){/* Wait for Thread Handler to be Initiated */}
+    }
+
+    public void init(final Context context, String host, int port){
+        notifyConntectionState(null, RosterConnection.ConnectionState.INITIATING);
+        mApplicationContext = context.getApplicationContext();
+        mHost = host;
+        mPort = port;
+        initiateThread();
+        notifyConntectionState(null, RosterConnection.ConnectionState.INITIATED);
     }
 
     public void init(final Context context, String host){
-        mApplicationContext = context.getApplicationContext();
         mHost = host;
-        initiateThread();
+        int port = 5522;
+        init(context, host, port);
     }
 
     public String getHost(){
         return mHost;
+    }
+
+    public int getPort() {
+        return mPort;
     }
 
     public void connectUser(final String jid, final String password) {
@@ -133,10 +146,13 @@ class RosterManager {
     }
 
     private void closeConnection() {
-        if (mConnection != null) {
-            mConnection.disconnect();
+        try {
+            if (mConnection != null)
+                mConnection.disconnect();
+            mConnection = null;
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        cleanUpManager();
     }
 
     public void loadContacts (){
@@ -193,46 +209,29 @@ class RosterManager {
         return authenticateTime;
     }
 
+    public RosterConnection.ConnectionState getConnectionState() {
+        return mConnectionState;
+    }
+
     public void setAuthenticateTime(Long authenticateTime) {
         this.authenticateTime = authenticateTime;
     }
 
-    public void notifyRecieveMessage(String jid, String messageBody) {
+    public void notifyReceiveMessage(String jid, String messageBody) {
         int count = -1;
-        ChatMessage chatMessage = new ChatMessage(messageBody, System.currentTimeMillis(), ChatMessage.Type.RECEIVED);
+        ChatMessage chatMessage = new ChatMessage(messageBody, System.currentTimeMillis(), ChatMessage.RECEIVED);
 
         count = MessageRepository.getInstance().addMessage(jid, chatMessage);
-
-        if(mShowNotifications){
-            showNotifications(jid, messageBody);
-        }
 
         for (OnMessageChangeListener listener : mMessageChangeListeners) {
             listener.onMessageReceived(jid, messageBody, count);
         }
     }
 
-    private void showNotifications(String fromJID, String newMessage) {
-        validateState();
-        Contact contact = ContactRepository.getInstance().getContact(fromJID);
-        if(contact == null) return;
-        int red = 0;
-        int green = 102;
-        int blue = 204;
-        int alpha = 255;
-        NotifyMe.Builder notifyMe = new NotifyMe.Builder(mApplicationContext);
-        notifyMe.title(contact.getUserName());
-        notifyMe.content(newMessage);
-        notifyMe.color(red, green, blue, alpha);//Color of notification header
-        notifyMe.delay(1000);//Delay in ms
-        notifyMe.key("new_message");
-        notifyMe.build();
-    }
-
     public void notifySendMessage(String jid, String messageBody, boolean success) {
         int count = -1;
         if (success) {
-            ChatMessage chatMessage = new ChatMessage(messageBody, System.currentTimeMillis(), ChatMessage.Type.SENT);
+            ChatMessage chatMessage = new ChatMessage(messageBody, System.currentTimeMillis(), ChatMessage.SENT);
             count = MessageRepository.getInstance().addMessage(jid, chatMessage);
         }
 
@@ -274,7 +273,6 @@ class RosterManager {
 
     public void notifyConntectionState(XMPPConnection connection, RosterConnection.ConnectionState connectionState) {
         mConnectionState = connectionState;
-        loadContacts();
         for (OnConnectionStateListener listener : mConnectionStateListeners) {
             listener.onConnectionStateChange(connectionState);
         }
@@ -299,19 +297,9 @@ class RosterManager {
         mRosterUpdatesListeners.remove(rosterChangesListener);
     }
 
-    public void cleanUpManager() {
-        try {
-            if (mConnection != null)
-                mConnection.disconnect();
-            mConnection = null;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    private void cleanUpManager() {
         MessageRepository.getInstance().cleanUpMessages();
         ContactRepository.getInstance().cleanUpContacts();
-        if (mMessageChangeListeners != null) mMessageChangeListeners.clear();
-//        if (mConnectionStateListeners != null) mConnectionStateListeners.clear();
-        if (mRosterUpdatesListeners != null) mRosterUpdatesListeners.clear();
     }
 
     public void addOnConnectionStateListener(OnConnectionStateListener connectionStateListener){
@@ -325,9 +313,6 @@ class RosterManager {
         mRoster = roster;
     }
 
-    public void enableNotifications(boolean enable) {
-        mShowNotifications = enable;
-    }
 
     public interface OnMessageChangeListener {
         void onMessageReceived(String fromJID, String newMessage, int totalCount);

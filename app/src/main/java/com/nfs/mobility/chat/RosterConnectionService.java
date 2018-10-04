@@ -5,8 +5,13 @@ import android.content.Intent;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.util.Log;
+
+import com.mobility.chat.xmpp.ContactRepository;
+import com.mobility.chat.xmpp.RosterConnection;
+import com.mobility.chat.xmpp.model.Contact;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
@@ -23,19 +28,16 @@ import java.util.List;
  * Created by gakwaya on 4/28/2016.
  */
 public class RosterConnectionService extends Service {
-    private static final String TAG = RosterConnectionService.class.getSimpleName();
-
     public static final String UI_AUTHENTICATED = "mobility.chat.UIAuthenticated";
     public static final String SEND_MESSAGE = "mobility.chat.SendMessage";
     public static final String BUNDLE_MESSAGE_BODY = "b_body";
     public static final String BUNDLE_TO = "b_to";
-
     public static final String NEW_MESSAGE = "mobility.chat.NewMessage";
     public static final String PRESENCE_CHANGED = "mobility.chat.PresenceChanged";
     public static final String CONTACTS_UPDATED = "mobility.chat.ContactSupdated";
     public static final String BUNDLE_FROM_JID = "b_from";
     public static final String BUNDLE_PRESENCE_TYPE = "b_type";
-
+    private static final String TAG = RosterConnectionService.class.getSimpleName();
     public static RosterConnection.ConnectionState sConnectionState;
     public static RosterConnection.LoggedInState sLoggedInState;
     private boolean mActive;//Stores whether or not the thread is active
@@ -76,8 +78,12 @@ public class RosterConnectionService extends Service {
 
     private void initConnection() {
         Log.d(TAG, "initConnection()");
+        String jid = PreferenceManager.getDefaultSharedPreferences(this)
+                .getString("xmpp_jid", null);
+        String mPassword = PreferenceManager.getDefaultSharedPreferences(this)
+                .getString("xmpp_password", null);
         if (mConnection == null) {
-            mConnection = new RosterConnection(this);
+            mConnection = new RosterConnection(this, jid, mPassword);
         }
         try {
             mConnection.connect();
@@ -121,7 +127,7 @@ public class RosterConnectionService extends Service {
 
     public void updateContacts() {
 
-        if(mConnection == null || mConnection.getRoster() == null) return;
+        if (mConnection == null || mConnection.getRoster() == null) return;
         Roster roster = mConnection.getRoster();
         Collection<RosterEntry> entries = roster.getEntries(); //
         Log.e(TAG, entries.toString());

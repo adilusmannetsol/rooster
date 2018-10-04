@@ -1,13 +1,14 @@
-package com.nfs.mobility.chat;
+package com.mobility.chat.xmpp;
 
 import android.content.Context;
+
+import com.mobility.chat.xmpp.model.ChatMessage;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import co.intentservice.chatui.models.ChatMessage;
 
 public class MessageRepository {
 

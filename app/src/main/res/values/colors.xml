@@ -5,15 +5,7 @@
     <color name="colorAccent">#FF4081</color>
 
 
-    <color name="bg_green_shade">#2d9125</color>
-    <color name="bg_grey_shade">#bababa</color>
-    <color name="bg_white_shade">#b7b7b7</color>
-
-
     <color name="bg_dark_grey_shade">#5b5b5b</color>
-    <color name="bg_light_grey_shade">#c9c9c9</color>
-
-
 
 
 </resources>
