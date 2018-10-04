@@ -14,4 +14,7 @@
     </string>
     <string name="roster_logout">Logout</string>
     <string name="title_item_detail">Item Detail</string>
+    <string name="error_incorrect_password">This password is incorrect</string>
+    <string name="title_item_list">Items</string>
+
 </resources>
